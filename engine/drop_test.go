@@ -1,29 +1,53 @@
-package engine_test
+package engine
 
 import (
-	"database/sql"
 	"testing"
 
 	"github.com/proullon/ramsql/engine/log"
-
-	_ "github.com/proullon/ramsql/driver"
 )
 
-func TestDrop(t *testing.T) {
+func TestDropAfterCreate(t *testing.T) {
 	log.UseTestLogger(t)
-	db, err := sql.Open("ramsql", "TestDrop")
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
-	defer db.Close()
 
-	_, err = db.Exec("CREATE TABLE account (id INT, email TEXT)")
+	e := testEngine(t)
+	defer e.Stop()
+
+	err := parseAndExecuteQuery(t, e, "CREATE TABLE account (id INT, email TEXT)")
 	if err != nil {
-		t.Fatalf("%s", err)
+		t.Fatal(err)
 	}
 
-	_, err = db.Exec("DROP TABLE account")
+	err = parseAndExecuteQuery(t, e, "DROP TABLE account")
 	if err != nil {
-		t.Fatalf("cannot drop table: %s", err)
+		t.Fatal(err)
+	}
+}
+
+func TestDropIfExistsAfterCreate(t *testing.T) {
+	log.UseTestLogger(t)
+
+	e := testEngine(t)
+	defer e.Stop()
+
+	err := parseAndExecuteQuery(t, e, "CREATE TABLE account (id INT, email TEXT)")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = parseAndExecuteQuery(t, e, "DROP TABLE IF EXISTS account")
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestDropIfExistsWithoutCreate(t *testing.T) {
+	log.UseTestLogger(t)
+
+	e := testEngine(t)
+	defer e.Stop()
+
+	err := parseAndExecuteQuery(t, e, "DROP TABLE IF EXISTS account")
+	if err != nil {
+		t.Fatal(err)
 	}
 }
