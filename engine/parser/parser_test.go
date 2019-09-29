@@ -3,7 +3,7 @@ package parser
 import (
 	"testing"
 
-	"github.com/proullon/ramsql/engine/log"
+	"github.com/mlhoyt/ramsql/engine/log"
 )
 
 func TestParserCreateTableSimple(t *testing.T) {
@@ -23,6 +23,11 @@ func TestParserCreateTableSimpleWithAutoIncrement(t *testing.T) {
 
 func TestParserCreateTableSimpleWithOtherAutoIncrement(t *testing.T) {
 	query := `CREATE TABLE account (id INT AUTO_INCREMENT, email TEXT)`
+	parse(query, 1, t)
+}
+
+func TestParserCreateTableFullPrimaryKey(t *testing.T) {
+	query := `CREATE TABLE account (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, email TEXT)`
 	parse(query, 1, t)
 }
 

@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/proullon/ramsql/cli"
-	_ "github.com/proullon/ramsql/driver"
+	"github.com/mlhoyt/ramsql/cli"
+	_ "github.com/mlhoyt/ramsql/driver"
 )
 
 func main() {

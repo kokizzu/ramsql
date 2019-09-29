@@ -3,7 +3,7 @@ package engine
 import (
 	"testing"
 
-	"github.com/proullon/ramsql/engine/log"
+	"github.com/mlhoyt/ramsql/engine/log"
 )
 
 func TestDropAfterCreate(t *testing.T) {

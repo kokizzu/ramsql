@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/proullon/ramsql/engine/parser"
+	"github.com/mlhoyt/ramsql/engine/parser"
 )
 
 func parseAndExecuteQuery(t *testing.T, e *Engine, query string) error {
