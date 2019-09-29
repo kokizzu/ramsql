@@ -16,6 +16,16 @@ func TestParserCreateTableSimpleWithPrimaryKey(t *testing.T) {
 	parse(query, 1, t)
 }
 
+func TestParserCreateTableSimpleWithAutoIncrement(t *testing.T) {
+	query := `CREATE TABLE account (id INT AUTOINCREMENT, email TEXT)`
+	parse(query, 1, t)
+}
+
+func TestParserCreateTableSimpleWithOtherAutoIncrement(t *testing.T) {
+	query := `CREATE TABLE account (id INT AUTO_INCREMENT, email TEXT)`
+	parse(query, 1, t)
+}
+
 func TestParserMultipleInstructions(t *testing.T) {
 	query := `CREATE TABLE account (id INT, email TEXT);CREATE TABLE user (id INT, email TEXT)`
 	parse(query, 2, t)

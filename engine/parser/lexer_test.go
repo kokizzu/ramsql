@@ -6,7 +6,7 @@ import (
 )
 
 func TestLexerSimple(t *testing.T) {
-	query := `CREATE TABLE `+"`"+`account`+"`"+``
+	query := `CREATE TABLE ` + "`" + `account` + "`" + ``
 
 	lexer := lexer{}
 	decls, err := lexer.lex([]byte(query))
@@ -40,5 +40,35 @@ func TestLexerWithGTOEandLTOEOperator(t *testing.T) {
 
 	if len(decls) != 21 {
 		t.Fatalf("Lexing failed, expected 21 tokens, got %d", len(decls))
+	}
+}
+
+func TestLexerAutoIncrement(t *testing.T) {
+	query := `AUTOINCREMENT`
+
+	lexer := lexer{}
+	decls, err := lexer.lex([]byte(query))
+	if err != nil {
+		t.Fatalf("Cannot lex <%s> string", query)
+	}
+
+	nrExpectedDecls := 1
+	if len(decls) != nrExpectedDecls {
+		t.Fatalf("Lexing failed, expected %d tokens, got %d", nrExpectedDecls, len(decls))
+	}
+}
+
+func TestLexerOtherAutoIncrement(t *testing.T) {
+	query := `AUTO_INCREMENT`
+
+	lexer := lexer{}
+	decls, err := lexer.lex([]byte(query))
+	if err != nil {
+		t.Fatalf("Cannot lex <%s> string", query)
+	}
+
+	nrExpectedDecls := 1
+	if len(decls) != nrExpectedDecls {
+		t.Fatalf("Lexing failed, expected %d tokens, got %d", nrExpectedDecls, len(decls))
 	}
 }
