@@ -31,6 +31,11 @@ func TestParserCreateTableFullPrimaryKey(t *testing.T) {
 	parse(query, 1, t)
 }
 
+func TestParserCreateTableOnUpdate(t *testing.T) {
+	query := `CREATE TABLE account (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, modified_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP)`
+	parse(query, 1, t)
+}
+
 func TestParserMultipleInstructions(t *testing.T) {
 	query := `CREATE TABLE account (id INT, email TEXT);CREATE TABLE user (id INT, email TEXT)`
 	parse(query, 2, t)

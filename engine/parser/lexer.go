@@ -232,7 +232,8 @@ func (l *lexer) MatchUniqueToken() bool {
 }
 
 func (l *lexer) MatchLocalTimestampToken() bool {
-	return l.Match([]byte("localtimestamp"), LocalTimestampToken)
+	return l.Match([]byte("localtimestamp"), LocalTimestampToken) ||
+		l.Match([]byte("current_timestamp"), LocalTimestampToken)
 }
 
 func (l *lexer) MatchDefaultToken() bool {

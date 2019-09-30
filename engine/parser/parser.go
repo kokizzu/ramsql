@@ -510,7 +510,7 @@ func (p *parser) parseQuotedToken() (*Decl, error) {
 	quoted := false
 	quoteToken := DoubleQuoteToken
 
-	if p.is(DoubleQuoteToken) || p.is(BacktickToken){
+	if p.is(DoubleQuoteToken) || p.is(BacktickToken) {
 		quoted = true
 		quoteToken = p.cur().Token
 		if err := p.next(); err != nil {
@@ -662,7 +662,7 @@ func (p *parser) parseValue() (*Decl, error) {
 		}
 	}
 
-	valueDecl, err := p.consumeToken(StringToken, NumberToken, DateToken, NowToken)
+	valueDecl, err := p.consumeToken(StringToken, NumberToken, DateToken, NowToken, LocalTimestampToken)
 	if err != nil {
 		debug("parseValue: Wasn't expecting %v\n", p.tokens[p.index])
 		return nil, err

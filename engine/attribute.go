@@ -21,6 +21,7 @@ type Attribute struct {
 	typeName      string
 	typeInstance  interface{}
 	defaultValue  interface{}
+	onUpdateValue interface{}
 	domain        Domain
 	autoIncrement bool
 	unique        bool
@@ -48,11 +49,12 @@ func parseAttribute(decl *parser.Decl) (Attribute, error) {
 	typeDecl := decl.Decl[1:]
 	for i := range typeDecl {
 		log.Debug("Got %v for %s %s", typeDecl[i], attr.name, attr.typeName)
-		if typeDecl[i].Token == parser.AutoincrementToken {
+		switch typeDecl[i].Token {
+		case parser.AutoincrementToken: // AUTOINCREMENT
 			attr.autoIncrement = true
-		}
-
-		if typeDecl[i].Token == parser.DefaultToken {
+		case parser.UniqueToken: // UNIQUE
+			attr.unique = true
+		case parser.DefaultToken: // DEFAULT <VALUE>
 			log.Debug("we get a default value for %s: %s!\n", attr.name, typeDecl[i].Decl[0].Lexeme)
 			switch typeDecl[i].Decl[0].Token {
 			case parser.LocalTimestampToken, parser.NowToken:
@@ -62,13 +64,17 @@ func parseAttribute(decl *parser.Decl) (Attribute, error) {
 				log.Debug("Setting default value to '%v'\n", typeDecl[i].Decl[0].Lexeme)
 				attr.defaultValue = typeDecl[i].Decl[0].Lexeme
 			}
+		case parser.OnToken: // ON UPDATE <VALUE>
+			log.Debug("we get a on update value for %s: %s!\n", attr.name, typeDecl[i].Decl[0].Decl[0].Lexeme)
+			switch typeDecl[i].Decl[0].Decl[0].Token {
+			case parser.LocalTimestampToken, parser.NowToken:
+				log.Debug("Setting on update value to NOW() func !\n")
+				attr.onUpdateValue = func() interface{} { return time.Now().Format(parser.DateLongFormat) }
+			default:
+				log.Debug("Setting on update value to '%v'\n", typeDecl[i].Decl[0].Decl[0].Lexeme)
+				attr.onUpdateValue = typeDecl[i].Decl[0].Decl[0].Lexeme
+			}
 		}
-
-		// Check if attribute is unique
-		if typeDecl[i].Token == parser.UniqueToken {
-			attr.unique = true
-		}
-
 	}
 
 	if strings.ToLower(attr.typeName) == "bigserial" {

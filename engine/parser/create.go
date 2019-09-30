@@ -173,7 +173,7 @@ func (p *parser) parseTable(tokens []Token) (*Decl, error) {
 					withDecl.Add(timeDecl)
 					timeDecl.Add(zoneDecl)
 				}
-			case DefaultToken: // DEFAULT
+			case DefaultToken: // DEFAULT <VALUE>
 				dDecl, err := p.consumeToken(DefaultToken)
 				if err != nil {
 					return nil, err
@@ -184,6 +184,25 @@ func (p *parser) parseTable(tokens []Token) (*Decl, error) {
 					return nil, err
 				}
 				dDecl.Add(vDecl)
+			case OnToken: // ON UPDATE <VALUE>
+				onDecl, err := p.consumeToken(OnToken)
+				if err != nil {
+					return nil, err
+				}
+
+				updateDecl, err := p.consumeToken(UpdateToken)
+				if err != nil {
+					return nil, err
+				}
+
+				vDecl, err := p.consumeToken(FalseToken, StringToken, NumberToken, LocalTimestampToken)
+				if err != nil {
+					return nil, err
+				}
+
+				onDecl.Add(updateDecl)
+				updateDecl.Add(vDecl)
+				newAttribute.Add(onDecl)
 			default:
 				// Unknown column constraint
 				return nil, p.syntaxError()

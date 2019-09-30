@@ -2,6 +2,7 @@ package engine_test
 
 import (
 	"database/sql"
+	"fmt"
 	"testing"
 	"time"
 
@@ -206,4 +207,124 @@ func TestUpdateNotNull(t *testing.T) {
 		t.Fatalf("Cannot update table account: %s", err)
 	}
 
+}
+
+func TestInsertDefaultCurrentTimestamp(t *testing.T) {
+	log.UseTestLogger(t)
+
+	db, err := sql.Open("ramsql", "TestInsertDefaultCurrentTimestamp")
+	if err != nil {
+		t.Fatalf("sql.Open : Error : %s\n", err)
+	}
+	defer db.Close()
+
+	_, err = db.Exec("CREATE TABLE account (id INT AUTOINCREMENT, email TEXT, creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP)")
+	if err != nil {
+		t.Fatalf("sql.Exec: Error: %s\n", err)
+	}
+
+	_, err = db.Exec("INSERT INTO account ('email') VALUES ('foo@bar.com')")
+	if err != nil {
+		t.Fatalf("Cannot insert into table account: %s", err)
+	}
+
+	rows, err := db.Query(`SELECT id, creation_date FROM account WHERE email = 'foo@bar.com'`)
+	if err != nil {
+		t.Fatalf("cannot select row: %s", err)
+	}
+
+	var id int
+	var creationDate string
+
+	n := 0
+	for rows.Next() {
+		n++
+		err = rows.Scan(&id, &creationDate)
+		if err != nil {
+			t.Fatalf("cannot scan row %d: %s", n, err)
+		}
+	}
+	rows.Close()
+
+	if n != 1 {
+		t.Fatalf("Expected 1 rows, got %d", n)
+	}
+
+	if creationDate == "CURRENT_TIMESTAMP" {
+		t.Fatalf("Expected timestamp value for creation_date but found string literal 'CURRENT_TIMESTAMP'")
+	}
+}
+
+func TestUpdateDefaultCurrentTimestampOnUpdateCurrentTimestamp(t *testing.T) {
+	log.UseTestLogger(t)
+
+	db, err := sql.Open("ramsql", "TestUpdateDefaultCurrentTimestampOnUpdateCurrentTimestamp")
+	if err != nil {
+		t.Fatalf("sql.Open : Error : %s\n", err)
+	}
+	defer db.Close()
+
+	_, err = db.Exec("CREATE TABLE account (id INT AUTOINCREMENT, email TEXT, modified_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP)")
+	if err != nil {
+		t.Fatalf("sql.Exec: Error: %s\n", err)
+	}
+
+	_, err = db.Exec("INSERT INTO account ('email') VALUES ('foo@bar.com')")
+	if err != nil {
+		t.Fatalf("Cannot insert into table account: %s", err)
+	}
+
+	var id int
+	var modifiedDate string
+
+	rows, err := db.Query(`SELECT id, modified_date FROM account WHERE email = 'foo@bar.com'`)
+	if err != nil {
+		t.Fatalf("cannot select row: %s", err)
+	}
+
+	n := 0
+	for rows.Next() {
+		n++
+		err = rows.Scan(&id, &modifiedDate)
+		if err != nil {
+			t.Fatalf("cannot scan row %d: %s", n, err)
+		}
+	}
+	rows.Close()
+
+	if n != 1 {
+		t.Fatalf("Expected 1 rows, got %d", n)
+	}
+
+	insertModifiedDate := modifiedDate
+
+	_, err = db.Exec(fmt.Sprintf("UPDATE account SET email = 'roger@gmail.com' WHERE id = %d", id))
+	if err != nil {
+		t.Fatalf("Cannot update table account: %s", err)
+	}
+
+	rows, err = db.Query(fmt.Sprintf("SELECT id, modified_date FROM account WHERE email = 'roger@gmail.com'"))
+	if err != nil {
+		t.Fatalf("cannot select row: %s", err)
+	}
+
+	n = 0
+	for rows.Next() {
+		n++
+		err = rows.Scan(&id, &modifiedDate)
+		if err != nil {
+			t.Fatalf("cannot scan row %d: %s", n, err)
+		}
+	}
+	rows.Close()
+
+	if n != 1 {
+		t.Fatalf("Expected 1 rows, got %d", n)
+	}
+
+	updateModifiedDate := modifiedDate
+
+	if insertModifiedDate == updateModifiedDate {
+		t.Fatalf("Expected insert modified_date (%s) and update modified_date (%s) to be different", insertModifiedDate, updateModifiedDate)
+	}
 }
