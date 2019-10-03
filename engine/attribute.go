@@ -9,26 +9,32 @@ import (
 	"github.com/mlhoyt/ramsql/engine/parser"
 )
 
-// Domain is the set of allowable values for an Attribute.
-type Domain struct {
-}
-
-// Attribute is a named column of a relation
-// AKA Field
-// AKA Column
+// Attribute (aka Field, Column) is a named column of a relation
 type Attribute struct {
 	name          string
 	typeName      string
-	typeInstance  interface{}
 	defaultValue  interface{}
 	onUpdateValue interface{}
-	domain        Domain
-	autoIncrement bool
-	unique        bool
+	autoIncrement bool // TODO: rename to isAutoIncrement
+	unique        bool // TODO: rename to isUnique
+	isNullable    bool
 }
 
+// NewAttribute initialize a new Attribute struct
+func NewAttribute(name string, typeName string, autoIncrement bool) Attribute {
+	return Attribute{
+		name:          name,
+		typeName:      typeName,
+		autoIncrement: autoIncrement,
+		isNullable:    true,
+	}
+}
+
+// TranslateDecl traverses a Decl tree translating token sequences into Attribute settings
+// TODO func (u *Attribute) TranslateDecl(decl *parser.Decl) error {...}
+
 func parseAttribute(decl *parser.Decl) (Attribute, error) {
-	attr := Attribute{}
+	attr := NewAttribute("", "", false)
 
 	// Attribute name
 	if decl.Token != parser.StringToken {
@@ -54,6 +60,19 @@ func parseAttribute(decl *parser.Decl) (Attribute, error) {
 			attr.autoIncrement = true
 		case parser.UniqueToken: // UNIQUE
 			attr.unique = true
+		case parser.NotToken: // NOT NULL
+			if len(typeDecl[i].Decl) != 1 {
+				return attr, fmt.Errorf("Attribute %s has incomplete NOT NULL constraint", attr.name)
+			}
+			switch typeDecl[i].Decl[0].Token {
+			case parser.NullToken:
+				attr.isNullable = false
+			}
+		case parser.NullToken: // NULL
+			if len(typeDecl[i].Decl) != 0 {
+				return attr, fmt.Errorf("Attribute %s has NULL constraint with extra arguments", attr.name)
+			}
+			attr.isNullable = true
 		case parser.DefaultToken: // DEFAULT <VALUE>
 			log.Debug("we get a default value for %s: %s!\n", attr.name, typeDecl[i].Decl[0].Lexeme)
 			switch typeDecl[i].Decl[0].Token {
@@ -82,15 +101,4 @@ func parseAttribute(decl *parser.Decl) (Attribute, error) {
 	}
 
 	return attr, nil
-}
-
-// NewAttribute initialize a new Attribute struct
-func NewAttribute(name string, typeName string, autoIncrement bool) Attribute {
-	a := Attribute{
-		name:          name,
-		typeName:      typeName,
-		autoIncrement: autoIncrement,
-	}
-
-	return a
 }

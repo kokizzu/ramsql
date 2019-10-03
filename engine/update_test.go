@@ -239,19 +239,20 @@ func TestInsertDefaultCurrentTimestamp(t *testing.T) {
 	n := 0
 	for rows.Next() {
 		n++
+
 		err = rows.Scan(&id, &creationDate)
 		if err != nil {
 			t.Fatalf("cannot scan row %d: %s", n, err)
+		}
+
+		if creationDate == "CURRENT_TIMESTAMP" {
+			t.Fatalf("Expected timestamp value for creation_date but found string literal 'CURRENT_TIMESTAMP'")
 		}
 	}
 	rows.Close()
 
 	if n != 1 {
 		t.Fatalf("Expected 1 rows, got %d", n)
-	}
-
-	if creationDate == "CURRENT_TIMESTAMP" {
-		t.Fatalf("Expected timestamp value for creation_date but found string literal 'CURRENT_TIMESTAMP'")
 	}
 }
 

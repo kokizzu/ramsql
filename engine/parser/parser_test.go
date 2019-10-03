@@ -6,32 +6,42 @@ import (
 	"github.com/mlhoyt/ramsql/engine/log"
 )
 
-func TestParserCreateTableSimple(t *testing.T) {
+func TestParserCreateTableNoAttrConstraints(t *testing.T) {
 	query := `CREATE TABLE account (id INT, email TEXT)`
 	parse(query, 1, t)
 }
 
-func TestParserCreateTableSimpleWithPrimaryKey(t *testing.T) {
+func TestParserCreateTableWithPrimaryKeyConstraint(t *testing.T) {
 	query := `CREATE TABLE account (id INT PRIMARY KEY, email TEXT)`
 	parse(query, 1, t)
 }
 
-func TestParserCreateTableSimpleWithAutoIncrement(t *testing.T) {
+func TestParserCreateTableWithAutoIncrementConstraint(t *testing.T) {
 	query := `CREATE TABLE account (id INT AUTOINCREMENT, email TEXT)`
 	parse(query, 1, t)
 }
 
-func TestParserCreateTableSimpleWithOtherAutoIncrement(t *testing.T) {
+func TestParserCreateTableWithOtherAutoIncrementConstraint(t *testing.T) {
 	query := `CREATE TABLE account (id INT AUTO_INCREMENT, email TEXT)`
 	parse(query, 1, t)
 }
 
-func TestParserCreateTableFullPrimaryKey(t *testing.T) {
+func TestParserCreateTableWithNotNullConstraint(t *testing.T) {
+	query := `CREATE TABLE account (id INT PRIMARY KEY AUTO_INCREMENT, email TEXT NOT NULL)`
+	parse(query, 1, t)
+}
+
+func TestParserCreateTableWithNullConstraint(t *testing.T) {
+	query := `CREATE TABLE account (id INT PRIMARY KEY AUTO_INCREMENT, email TEXT NULL)`
+	parse(query, 1, t)
+}
+
+func TestParserCreateTableNotNullPrimaryKeyConstraints(t *testing.T) {
 	query := `CREATE TABLE account (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, email TEXT)`
 	parse(query, 1, t)
 }
 
-func TestParserCreateTableOnUpdate(t *testing.T) {
+func TestParserCreateTableWithDefaultOnUpdateConstraints(t *testing.T) {
 	query := `CREATE TABLE account (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, modified_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP)`
 	parse(query, 1, t)
 }

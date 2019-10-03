@@ -86,8 +86,6 @@ func getRelation(e *Engine, intoDecl *parser.Decl) (*Relation, []*parser.Decl, e
 	return r, intoDecl.Decl[0].Decl, nil
 }
 
-type f func() interface{}
-
 func insert(r *Relation, attributes []*parser.Decl, values []*parser.Decl, returnedID string) (int64, error) {
 	var assigned = false
 	var id int64
@@ -111,6 +109,7 @@ func insert(r *Relation, attributes []*parser.Decl, values []*parser.Decl, retur
 				}
 				valuesindex = x
 				assigned = true
+
 				if returnedID == attr.name {
 					var err error
 					id, err = strconv.ParseInt(values[x].Lexeme, 10, 64)
@@ -121,14 +120,15 @@ func insert(r *Relation, attributes []*parser.Decl, values []*parser.Decl, retur
 			}
 		}
 
-		// If attribute is AUTO INCREMENT, compute it and assign it
+		// If attribute is AUTO INCREMENT then compute and assign it
 		if attr.autoIncrement {
-			assigned = true
 			id = int64(len(r.rows) + 1)
 			t.Append(id)
+
+			assigned = true
 		}
 
-		// Do we have a UNIQUE attribute ? if so
+		// If attribute is UNIQUE then validate it is so
 		if attr.unique {
 			for i := range r.rows { // check all value already in relation (yup, no index tree)
 				if r.rows[i].Values[attrindex].(string) == string(values[valuesindex].Lexeme) {
@@ -137,7 +137,7 @@ func insert(r *Relation, attributes []*parser.Decl, values []*parser.Decl, retur
 			}
 		}
 
-		// If values was not explictly given, set default value
+		// If value was not explictly set (or implicitly computed) then use the default value
 		if assigned == false {
 			switch val := attr.defaultValue.(type) {
 			case func() interface{}:
@@ -145,6 +145,9 @@ func insert(r *Relation, attributes []*parser.Decl, values []*parser.Decl, retur
 				log.Debug("Setting func value '%v' to %s\n", v, attr.name)
 				t.Append(v)
 			default:
+				if val == nil && !attr.isNullable {
+					return 0, fmt.Errorf("Field '%s' with constraint 'NOT NULL' doesn't have a default value", attr.name)
+				}
 				log.Debug("Setting default value '%v' to %s\n", val, attr.name)
 				t.Append(attr.defaultValue)
 			}

@@ -133,6 +133,13 @@ func (p *parser) parseTable(tokens []Token) (*Decl, error) {
 					}
 					notDecl.Add(nullDecl)
 				}
+			case NullToken: // NULL
+				nullDecl, err := p.consumeToken(NullToken)
+				if err != nil {
+					return nil, err
+				}
+
+				newAttribute.Add(nullDecl)
 			case PrimaryToken: // PRIMARY KEY
 				if _, err = p.isNext(KeyToken); err == nil {
 					newPrimary := NewDecl(tokens[p.index])
