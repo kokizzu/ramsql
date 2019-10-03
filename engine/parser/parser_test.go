@@ -95,6 +95,56 @@ func TestParserCompleteWithBacktickQuotes(t *testing.T) {
 // 	parse(query, 1, t)
 // }
 
+func TestParserCreateWithTableOptions1O1(t *testing.T) {
+	query := `CREATE TABLE user ( id INT PRIMARY KEY, email TEXT, birth_date DATE ) ENGINE=InnoDB`
+	parse(query, 1, t)
+}
+
+func TestParserCreateWithTableOptions1O2(t *testing.T) {
+	query := `CREATE TABLE user ( id INT PRIMARY KEY, email TEXT, birth_date DATE ) ENGINE InnoDB`
+	parse(query, 1, t)
+}
+
+func TestParserCreateWithTableOptions2aO1(t *testing.T) {
+	query := `CREATE TABLE user ( id INT PRIMARY KEY, email TEXT, birth_date DATE ) DEFAULT CHARSET=utf8`
+	parse(query, 1, t)
+}
+
+func TestParserCreateWithTableOptions2aO2(t *testing.T) {
+	query := `CREATE TABLE user ( id INT PRIMARY KEY, email TEXT, birth_date DATE ) DEFAULT CHARSET utf8`
+	parse(query, 1, t)
+}
+
+func TestParserCreateWithTableOptions2bO1(t *testing.T) {
+	query := `CREATE TABLE user ( id INT PRIMARY KEY, email TEXT, birth_date DATE ) CHARSET=utf8`
+	parse(query, 1, t)
+}
+
+func TestParserCreateWithTableOptions2bO2(t *testing.T) {
+	query := `CREATE TABLE user ( id INT PRIMARY KEY, email TEXT, birth_date DATE ) CHARSET utf8`
+	parse(query, 1, t)
+}
+
+func TestParserCreateWithTableOptions3aO1(t *testing.T) {
+	query := `CREATE TABLE user ( id INT PRIMARY KEY, email TEXT, birth_date DATE ) DEFAULT CHARACTER SET=utf8`
+	parse(query, 1, t)
+}
+
+func TestParserCreateWithTableOptions3aO2(t *testing.T) {
+	query := `CREATE TABLE user ( id INT PRIMARY KEY, email TEXT, birth_date DATE ) DEFAULT CHARACTER SET utf8`
+	parse(query, 1, t)
+}
+
+func TestParserCreateWithTableOptions3bO1(t *testing.T) {
+	query := `CREATE TABLE user ( id INT PRIMARY KEY, email TEXT, birth_date DATE ) CHARACTER SET=utf8`
+	parse(query, 1, t)
+}
+
+func TestParserCreateWithTableOptions3bO2(t *testing.T) {
+	query := `CREATE TABLE user ( id INT PRIMARY KEY, email TEXT, birth_date DATE ) CHARACTER SET utf8`
+	parse(query, 1, t)
+}
+
 func TestParserDropTableSimple(t *testing.T) {
 	query := `DROP TABLE myTableName`
 	parse(query, 1, t)

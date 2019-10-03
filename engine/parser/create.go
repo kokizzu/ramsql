@@ -228,6 +228,146 @@ func (p *parser) parseTable(tokens []Token) (*Decl, error) {
 		p.index++
 	}
 
+	// Parse 'table_options' - these can be listed in any order
+tableOptions:
+	for p.index < len(tokens) {
+		switch p.cur().Token {
+		case EngineToken: // ENGINE [=] value
+			engineDecl, err := p.consumeToken(EngineToken)
+			if err != nil {
+				return nil, err
+			}
+
+			if p.cur().Token == EqualityToken {
+				if err = p.next(); err != nil {
+					return nil, err
+				}
+			}
+
+			vDecl, err := p.consumeToken(FalseToken, StringToken, NumberToken)
+			if err != nil {
+				return nil, err
+			}
+
+			engineDecl.Add(vDecl)
+			// TODO: tableDecl.Add(engineDecl)
+
+		case DefaultToken: // [DEFAULT] (CHARACTER SET, CHARSET, COLLATE) [=] value
+			if err := p.next(); err != nil {
+				return nil, err
+			}
+
+			switch p.cur().Token {
+			case CharsetToken: // CHARSET [=] value
+				if err := p.next(); err != nil {
+					return nil, err
+				}
+				charDecl := NewDecl(Token{Token: CharacterToken, Lexeme: "character"})
+				setDecl := NewDecl(Token{Token: SetToken, Lexeme: "set"})
+
+				if p.cur().Token == EqualityToken {
+					if err := p.next(); err != nil {
+						return nil, err
+					}
+				}
+
+				vDecl, err := p.consumeToken(StringToken)
+				if err != nil {
+					return nil, err
+				}
+
+				charDecl.Add(setDecl)
+				setDecl.Add(vDecl)
+				// TODO: tableDecl.Add(charDecl)
+
+			case CharacterToken: // CHARACTER SET [=] value
+				charDecl, err := p.consumeToken(CharacterToken)
+				if err != nil {
+					return nil, err
+				}
+
+				setDecl, err := p.consumeToken(SetToken)
+				if err != nil {
+					return nil, err
+				}
+
+				if p.cur().Token == EqualityToken {
+					if err := p.next(); err != nil {
+						return nil, err
+					}
+				}
+
+				vDecl, err := p.consumeToken(StringToken)
+				if err != nil {
+					return nil, err
+				}
+
+				charDecl.Add(setDecl)
+				setDecl.Add(vDecl)
+				// TODO: tableDecl.Add(charDecl)
+			default:
+				// Unknown 'table_option'
+				return nil, p.syntaxError()
+			}
+
+		case CharsetToken: // CHARSET [=] value
+			if err := p.next(); err != nil {
+				return nil, err
+			}
+			charDecl := NewDecl(Token{Token: CharacterToken, Lexeme: "character"})
+			setDecl := NewDecl(Token{Token: SetToken, Lexeme: "set"})
+
+			if p.cur().Token == EqualityToken {
+				if err := p.next(); err != nil {
+					return nil, err
+				}
+			}
+
+			vDecl, err := p.consumeToken(StringToken)
+			if err != nil {
+				return nil, err
+			}
+
+			charDecl.Add(setDecl)
+			setDecl.Add(vDecl)
+			// TODO: tableDecl.Add(charDecl)
+
+		case CharacterToken: // CHARACTER SET [=] value
+			charDecl, err := p.consumeToken(CharacterToken)
+			if err != nil {
+				return nil, err
+			}
+
+			setDecl, err := p.consumeToken(SetToken)
+			if err != nil {
+				return nil, err
+			}
+
+			if p.cur().Token == EqualityToken {
+				if err := p.next(); err != nil {
+					return nil, err
+				}
+			}
+
+			vDecl, err := p.consumeToken(StringToken)
+			if err != nil {
+				return nil, err
+			}
+
+			charDecl.Add(setDecl)
+			setDecl.Add(vDecl)
+			// TODO: tableDecl.Add(charDecl)
+
+		case SemicolonToken: // semicolon means end of instruction
+			// Important NOT to consume the semicolon token
+
+			break tableOptions
+
+		default: // Does not appear to be a 'table_constraint' so stop processing instruction
+			break tableOptions
+		}
+	}
+
 	return tableDecl, nil
 }
 
