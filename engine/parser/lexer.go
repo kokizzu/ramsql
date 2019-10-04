@@ -81,6 +81,10 @@ const (
 	EngineToken
 	CharsetToken
 	CharacterToken
+	IndexToken
+	UsingToken
+	BtreeToken
+	HashToken
 
 	// Type Token
 
@@ -180,6 +184,10 @@ func (l *lexer) lex(instruction []byte) ([]Token, error) {
 	matchers = append(matchers, l.MatchEngineToken)
 	matchers = append(matchers, l.MatchCharsetToken)
 	matchers = append(matchers, l.MatchCharacterToken)
+	matchers = append(matchers, l.MatchIndexToken)
+	matchers = append(matchers, l.MatchUsingToken)
+	matchers = append(matchers, l.MatchBtreeToken)
+	matchers = append(matchers, l.MatchHashToken)
 	// Type Matcher
 	matchers = append(matchers, l.MatchPrimaryToken)
 	matchers = append(matchers, l.MatchKeyToken)
@@ -420,6 +428,22 @@ func (l *lexer) MatchCharsetToken() bool {
 
 func (l *lexer) MatchCharacterToken() bool {
 	return l.Match([]byte("character"), CharacterToken)
+}
+
+func (l *lexer) MatchIndexToken() bool {
+	return l.Match([]byte("index"), IndexToken)
+}
+
+func (l *lexer) MatchUsingToken() bool {
+	return l.Match([]byte("using"), UsingToken)
+}
+
+func (l *lexer) MatchBtreeToken() bool {
+	return l.Match([]byte("btree"), BtreeToken)
+}
+
+func (l *lexer) MatchHashToken() bool {
+	return l.Match([]byte("hash"), HashToken)
 }
 
 func (l *lexer) MatchStringToken() bool {

@@ -46,6 +46,31 @@ func TestParserCreateTableWithDefaultOnUpdateConstraints(t *testing.T) {
 	parse(query, 1, t)
 }
 
+func TestParserCreateTableWithIndexNoNameNoType(t *testing.T) {
+	query := `CREATE TABLE account (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, name TEXT NOT NULL, INDEX (name))`
+	parse(query, 1, t)
+}
+
+func TestParserCreateTableWithIndexNoType(t *testing.T) {
+	query := `CREATE TABLE account (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, name TEXT NOT NULL, INDEX name_idx (name))`
+	parse(query, 1, t)
+}
+
+func TestParserCreateTableWithIndexNoNameTypeBtree(t *testing.T) {
+	query := `CREATE TABLE account (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, name TEXT NOT NULL, INDEX USING BTREE (name))`
+	parse(query, 1, t)
+}
+
+func TestParserCreateTableWithIndexNoNameTypeHash(t *testing.T) {
+	query := `CREATE TABLE account (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, name TEXT NOT NULL, INDEX USING HASH (name))`
+	parse(query, 1, t)
+}
+
+func TestParserCreateTableWithIndexAll(t *testing.T) {
+	query := `CREATE TABLE account (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, name TEXT NOT NULL, INDEX name_idx USING BTREE (name))`
+	parse(query, 1, t)
+}
+
 func TestParserMultipleInstructions(t *testing.T) {
 	query := `CREATE TABLE account (id INT, email TEXT);CREATE TABLE user (id INT, email TEXT)`
 	parse(query, 2, t)

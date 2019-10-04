@@ -94,140 +94,144 @@ func (p *parser) parseTable() (*Decl, error) {
 			if err != nil {
 				return nil, err
 			}
-		}
 
-		// New attribute name
-		newAttribute, err := p.parseQuotedToken()
-		if err != nil {
-			return nil, err
-		}
-		tableDecl.Add(newAttribute)
+			// { INDEX | KEY } [ index_name ] [?:index_type USING { BTREE | HASH } ] '(' { col_name [ '(' length ')' ] | '(' expr ')' } [ ASC | DESC ] ',' ... ')' [?:index_option ... ]
+		} else if p.cur().Token == IndexToken || p.cur().Token == KeyToken {
+			_, err := p.parseTableIndex()
+			if err != nil {
+				return nil, err
+			}
 
-		newAttributeType, err := p.parseType()
-		if err != nil {
-			return nil, err
-		}
-		newAttribute.Add(newAttributeType)
+			// <TABLE-ATTRIBUTE>
+		} else {
+			// New attribute name
+			newAttribute, err := p.parseQuotedToken()
+			if err != nil {
+				return nil, err
+			}
+			tableDecl.Add(newAttribute)
 
-		// All the following tokens until bracket or comma are column constraints.
-		// Column constraints can be listed in any order.
-		for p.isNot(BracketClosingToken, CommaToken) {
-			switch p.cur().Token {
-			case UniqueToken: // UNIQUE
-				uniqueDecl, err := p.consumeToken(UniqueToken)
-				if err != nil {
-					return nil, err
-				}
-				newAttribute.Add(uniqueDecl)
-			case NotToken: // NOT NULL
-				if _, err = p.isNext(NullToken); err == nil {
-					notDecl, err := p.consumeToken(NotToken)
+			newAttributeType, err := p.parseType()
+			if err != nil {
+				return nil, err
+			}
+			newAttribute.Add(newAttributeType)
+
+			// All the following tokens until bracket or comma are column constraints.
+			// Column constraints can be listed in any order.
+			for p.isNot(BracketClosingToken, CommaToken) {
+				switch p.cur().Token {
+				case UniqueToken: // UNIQUE
+					uniqueDecl, err := p.consumeToken(UniqueToken)
 					if err != nil {
 						return nil, err
 					}
-					newAttribute.Add(notDecl)
+					newAttribute.Add(uniqueDecl)
+				case NotToken: // NOT NULL
+					if _, err = p.isNext(NullToken); err == nil {
+						notDecl, err := p.consumeToken(NotToken)
+						if err != nil {
+							return nil, err
+						}
+						newAttribute.Add(notDecl)
+						nullDecl, err := p.consumeToken(NullToken)
+						if err != nil {
+							return nil, err
+						}
+						notDecl.Add(nullDecl)
+					}
+				case NullToken: // NULL
 					nullDecl, err := p.consumeToken(NullToken)
 					if err != nil {
 						return nil, err
 					}
-					notDecl.Add(nullDecl)
-				}
-			case NullToken: // NULL
-				nullDecl, err := p.consumeToken(NullToken)
-				if err != nil {
-					return nil, err
-				}
 
-				newAttribute.Add(nullDecl)
-			case PrimaryToken: // PRIMARY KEY
-				if _, err = p.isNext(KeyToken); err == nil {
-					newPrimary := NewDecl(p.cur())
-					newAttribute.Add(newPrimary)
+					newAttribute.Add(nullDecl)
+				case PrimaryToken: // PRIMARY KEY
+					if _, err = p.isNext(KeyToken); err == nil {
+						newPrimary := NewDecl(p.cur())
+						newAttribute.Add(newPrimary)
 
-					if err = p.next(); err != nil {
-						return nil, fmt.Errorf("Unexpected end")
+						if err = p.next(); err != nil {
+							return nil, fmt.Errorf("Unexpected end")
+						}
+
+						newKey := NewDecl(p.cur())
+						newPrimary.Add(newKey)
+
+						if err = p.next(); err != nil {
+							return nil, fmt.Errorf("Unexpected end")
+						}
 					}
-
-					newKey := NewDecl(p.cur())
-					newPrimary.Add(newKey)
-
-					if err = p.next(); err != nil {
-						return nil, fmt.Errorf("Unexpected end")
-					}
-				}
-			case AutoincrementToken:
-				autoincDecl, err := p.consumeToken(AutoincrementToken)
-				if err != nil {
-					return nil, err
-				}
-				newAttribute.Add(autoincDecl)
-			case WithToken: // WITH TIME ZONE
-				if strings.ToLower(newAttributeType.Lexeme) == "timestamp" {
-					withDecl, err := p.consumeToken(WithToken)
+				case AutoincrementToken:
+					autoincDecl, err := p.consumeToken(AutoincrementToken)
 					if err != nil {
 						return nil, err
 					}
-					timeDecl, err := p.consumeToken(TimeToken)
+					newAttribute.Add(autoincDecl)
+				case WithToken: // WITH TIME ZONE
+					if strings.ToLower(newAttributeType.Lexeme) == "timestamp" {
+						withDecl, err := p.consumeToken(WithToken)
+						if err != nil {
+							return nil, err
+						}
+						timeDecl, err := p.consumeToken(TimeToken)
+						if err != nil {
+							return nil, err
+						}
+						zoneDecl, err := p.consumeToken(ZoneToken)
+						if err != nil {
+							return nil, err
+						}
+						newAttributeType.Add(withDecl)
+						withDecl.Add(timeDecl)
+						timeDecl.Add(zoneDecl)
+					}
+				case DefaultToken: // DEFAULT <VALUE>
+					dDecl, err := p.consumeToken(DefaultToken)
 					if err != nil {
 						return nil, err
 					}
-					zoneDecl, err := p.consumeToken(ZoneToken)
+					newAttribute.Add(dDecl)
+					vDecl, err := p.consumeToken(FalseToken, StringToken, NumberToken, LocalTimestampToken)
 					if err != nil {
 						return nil, err
 					}
-					newAttributeType.Add(withDecl)
-					withDecl.Add(timeDecl)
-					timeDecl.Add(zoneDecl)
-				}
-			case DefaultToken: // DEFAULT <VALUE>
-				dDecl, err := p.consumeToken(DefaultToken)
-				if err != nil {
-					return nil, err
-				}
-				newAttribute.Add(dDecl)
-				vDecl, err := p.consumeToken(FalseToken, StringToken, NumberToken, LocalTimestampToken)
-				if err != nil {
-					return nil, err
-				}
-				dDecl.Add(vDecl)
-			case OnToken: // ON UPDATE <VALUE>
-				onDecl, err := p.consumeToken(OnToken)
-				if err != nil {
-					return nil, err
-				}
+					dDecl.Add(vDecl)
+				case OnToken: // ON UPDATE <VALUE>
+					onDecl, err := p.consumeToken(OnToken)
+					if err != nil {
+						return nil, err
+					}
 
-				updateDecl, err := p.consumeToken(UpdateToken)
-				if err != nil {
-					return nil, err
-				}
+					updateDecl, err := p.consumeToken(UpdateToken)
+					if err != nil {
+						return nil, err
+					}
 
-				vDecl, err := p.consumeToken(FalseToken, StringToken, NumberToken, LocalTimestampToken)
-				if err != nil {
-					return nil, err
-				}
+					vDecl, err := p.consumeToken(FalseToken, StringToken, NumberToken, LocalTimestampToken)
+					if err != nil {
+						return nil, err
+					}
 
-				onDecl.Add(updateDecl)
-				updateDecl.Add(vDecl)
-				newAttribute.Add(onDecl)
-			default:
-				// Unknown column constraint
-				return nil, p.syntaxError()
+					onDecl.Add(updateDecl)
+					updateDecl.Add(vDecl)
+					newAttribute.Add(onDecl)
+				default:
+					// Unknown column constraint
+					return nil, p.syntaxError()
+				}
 			}
 		}
 
-		// The current token is either closing bracked or comma.
-
-		// Closing bracket means table parsing stops.
-		if p.cur().Token == BracketClosingToken {
+		// Comma means continue to next table column
+		// NOTE: With this the parser accepts ", )" and happily proceeds but this is not valid SQL (AFAIK)
+		if p.cur().Token == CommaToken {
 			p.index++
-			break
 		}
-
-		// Comma means continue on next table column.
-		p.index++
 	}
 
-	// Parse 'table_options' - these can be listed in any order
+	// Optional: <TABLE-OPTIONS> - these can be listed in any order
 tableOptions:
 	for p.index < p.tokenLen {
 		switch p.cur().Token {
@@ -403,4 +407,75 @@ func (p *parser) parsePrimaryKey() (*Decl, error) {
 	}
 
 	return primaryDecl, nil
+}
+
+// parseTableIndex processes tokens that should define a table index
+// { INDEX | KEY } [ index_name ] [?:index_type USING { BTREE | HASH } ] '(' { col_name [ '(' length ')' ] | '(' expr ')' } [ ASC | DESC ] ',' ... ')' [?:index_option ... ]
+func (p *parser) parseTableIndex() (*Decl, error) {
+	indexDecl := NewDecl(Token{Token: IndexToken, Lexeme: "index"})
+
+	// Required: { INDEX | KEY }
+	switch p.cur().Token {
+	case IndexToken, KeyToken:
+		_, err := p.consumeToken(IndexToken, KeyToken)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil, fmt.Errorf("Table INDEX definition must start with INDEX or KEY")
+	}
+
+	// Optional: <INDEX-NAME>
+	if p.is(StringToken) {
+		_, err := p.consumeToken(StringToken)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Optional: <INDEX-TYPE> := USING { BTREE | HASH }
+	if p.is(UsingToken) {
+		_, err := p.consumeToken(UsingToken)
+		if err != nil {
+			return nil, err
+		}
+
+		if p.is(BtreeToken) {
+			_, err := p.consumeToken(BtreeToken)
+			if err != nil {
+				return nil, err
+			}
+		} else if p.is(HashToken) {
+			_, err := p.consumeToken(HashToken)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, p.syntaxError()
+		}
+	}
+
+	// Required: '('
+	_, err := p.consumeToken(BracketOpeningToken)
+	if err != nil {
+		return nil, err
+	}
+
+	// Required: <INDEX-KEY> [, <INDEX-KEY>]* ')'
+	for {
+		_, err := p.consumeToken(StringToken)
+		if err != nil {
+			return nil, err
+		}
+
+		n, err := p.consumeToken(CommaToken, BracketClosingToken)
+		if err != nil {
+			return nil, err
+		}
+		if n.Token == BracketClosingToken {
+			break
+		}
+	}
+
+	return indexDecl, nil
 }
