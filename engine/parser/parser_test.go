@@ -337,23 +337,23 @@ func TestUnique(t *testing.T) {
 	}
 }
 
-func parse(query string, instructionNumber int, t *testing.T) []Instruction {
+func parse(query string, instructionCount int, t *testing.T) []Instruction {
 	log.UseTestLogger(t)
 
-	parser := parser{}
 	lexer := lexer{}
-	decls, err := lexer.lex([]byte(query))
+	tokens, err := lexer.lex([]byte(query))
 	if err != nil {
 		t.Fatalf("Cannot lex <%s> string: %s", query, err)
 	}
 
-	instructions, err := parser.parse(decls)
+	parser := NewParser(tokens)
+	instructions, err := parser.parse()
 	if err != nil {
 		t.Fatalf("Cannot parse tokens from '%s': %s", query, err)
 	}
 
-	if len(instructions) != instructionNumber {
-		t.Fatalf("Should have parsed %d instructions, got %d", instructionNumber, len(instructions))
+	if len(instructions) != instructionCount {
+		t.Fatalf("Should have parsed %d instructions, got %d", instructionCount, len(instructions))
 	}
 
 	return instructions

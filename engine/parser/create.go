@@ -5,11 +5,11 @@ import (
 	"strings"
 )
 
-func (p *parser) parseCreate(tokens []Token) (*Instruction, error) {
+func (p *parser) parseCreate() (*Instruction, error) {
 	i := &Instruction{}
 
 	// Set CREATE decl
-	createDecl := NewDecl(tokens[p.index])
+	createDecl := NewDecl(p.cur())
 	i.Decls = append(i.Decls, createDecl)
 
 	// After create token, should be either
@@ -21,27 +21,27 @@ func (p *parser) parseCreate(tokens []Token) (*Instruction, error) {
 	}
 	p.index++
 
-	switch tokens[p.index].Token {
+	switch p.cur().Token {
 	case TableToken:
-		d, err := p.parseTable(tokens)
+		d, err := p.parseTable()
 		if err != nil {
 			return nil, err
 		}
 		createDecl.Add(d)
 		break
 	default:
-		return nil, fmt.Errorf("Parsing error near <%s>", tokens[p.index].Lexeme)
+		return nil, fmt.Errorf("Parsing error near <%s>", p.cur().Lexeme)
 	}
 
 	return i, nil
 }
 
-func (p *parser) parseTable(tokens []Token) (*Decl, error) {
+func (p *parser) parseTable() (*Decl, error) {
 	var err error
-	tableDecl := NewDecl(tokens[p.index])
+	tableDecl := NewDecl(p.cur())
 	p.index++
 
-	// Maybe have "IF NOT EXISTS" here
+	// Optional: IF NOT EXISTS
 	if p.is(IfToken) {
 		ifDecl, err := p.consumeToken(IfToken)
 		if err != nil {
@@ -66,35 +66,34 @@ func (p *parser) parseTable(tokens []Token) (*Decl, error) {
 		}
 	}
 
-	// Now we should found table name
+	// Required: <TABLE-NAME>
 	nameTable, err := p.parseAttribute()
 	if err != nil {
 		return nil, p.syntaxError()
 	}
 	tableDecl.Add(nameTable)
 
-	// Now we should found brackets
-	if !p.hasNext() || tokens[p.index].Token != BracketOpeningToken {
+	// Required: '(' (Opening Parenthesis)
+	if !p.hasNext() || p.cur().Token != BracketOpeningToken {
 		return nil, fmt.Errorf("Table name token must be followed by table definition")
 	}
 	p.index++
 
-	for p.index < len(tokens) {
+	// Required: <TABLE-BODY>
+	for p.index < p.tokenLen {
 
-		switch p.cur().Token {
-		case PrimaryToken:
+		// ')' (Closing parenthesis)
+		if p.cur().Token == BracketClosingToken {
+			p.consumeToken(BracketClosingToken)
+			break
+		}
+
+		// PRIMARY KEY ( <INDEX-KEY> [, ...] )
+		if p.cur().Token == PrimaryToken {
 			_, err := p.parsePrimaryKey()
 			if err != nil {
 				return nil, err
 			}
-			continue
-		default:
-		}
-
-		// Closing bracket ?
-		if tokens[p.index].Token == BracketClosingToken {
-			p.consumeToken(BracketClosingToken)
-			break
 		}
 
 		// New attribute name
@@ -142,14 +141,14 @@ func (p *parser) parseTable(tokens []Token) (*Decl, error) {
 				newAttribute.Add(nullDecl)
 			case PrimaryToken: // PRIMARY KEY
 				if _, err = p.isNext(KeyToken); err == nil {
-					newPrimary := NewDecl(tokens[p.index])
+					newPrimary := NewDecl(p.cur())
 					newAttribute.Add(newPrimary)
 
 					if err = p.next(); err != nil {
 						return nil, fmt.Errorf("Unexpected end")
 					}
 
-					newKey := NewDecl(tokens[p.index])
+					newKey := NewDecl(p.cur())
 					newPrimary.Add(newKey)
 
 					if err = p.next(); err != nil {
@@ -219,7 +218,7 @@ func (p *parser) parseTable(tokens []Token) (*Decl, error) {
 		// The current token is either closing bracked or comma.
 
 		// Closing bracket means table parsing stops.
-		if tokens[p.index].Token == BracketClosingToken {
+		if p.cur().Token == BracketClosingToken {
 			p.index++
 			break
 		}
@@ -230,7 +229,7 @@ func (p *parser) parseTable(tokens []Token) (*Decl, error) {
 
 	// Parse 'table_options' - these can be listed in any order
 tableOptions:
-	for p.index < len(tokens) {
+	for p.index < p.tokenLen {
 		switch p.cur().Token {
 		case EngineToken: // ENGINE [=] value
 			engineDecl, err := p.consumeToken(EngineToken)

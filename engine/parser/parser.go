@@ -11,75 +11,38 @@ import (
 
 // The parser structure holds the parser's internal state.
 type parser struct {
-	i        []Instruction
-	index    int
-	tokenLen int
 	tokens   []Token
+	tokenLen int
+	index    int
+
+	i []Instruction
 }
 
-// Decl structure is the node to statement declaration tree
-type Decl struct {
-	Token  int
-	Lexeme string
-	Decl   []*Decl
-}
-
-// Stringy prints the declaration tree in console
-func (d Decl) Stringy(depth int) {
-	indent := ""
-	for i := 0; i < depth; i++ {
-		indent = fmt.Sprintf("%s    ", indent)
+// NewParser returns a parser object initialized with a list of tokens
+func NewParser(tokens []Token) parser {
+	p := parser{
+		tokens: stripSpaces(tokens),
+		index:  0,
+		i:      []Instruction{},
 	}
 
-	log.Debug("%s|-> %s\n", indent, d.Lexeme)
-	for _, subD := range d.Decl {
-		subD.Stringy(depth + 1)
-	}
+	p.tokenLen = len(p.tokens)
+
+	return p
 }
 
-// Instruction define a valid SQL statement
-type Instruction struct {
-	Decls []*Decl
-}
-
-// PrettyPrint prints instruction's declarations on console with indentation
-func (i Instruction) PrettyPrint() {
-	for _, d := range i.Decls {
-		d.Stringy(0)
-	}
-}
-
-// NewDecl initialize a Decl struct from a given token
-func NewDecl(t Token) *Decl {
-	return &Decl{
-		Token:  t.Token,
-		Lexeme: t.Lexeme,
-	}
-}
-
-// Add creates a new leaf with given Decl
-func (d *Decl) Add(subDecl *Decl) {
-	d.Decl = append(d.Decl, subDecl)
-}
-
-func (p *parser) parse(tokens []Token) ([]Instruction, error) {
-	tokens = stripSpaces(tokens)
-	p.tokens = tokens
-	log.Debug("parser.parse: %v\n", p.tokens)
-
-	p.tokenLen = len(tokens)
-	p.index = 0
+func (p *parser) parse() ([]Instruction, error) {
 	for p.hasNext() {
 		// fmt.Printf("Token index : %d\n", p.index)
 
 		// Found a new instruction
-		if tokens[p.index].Token == SemicolonToken {
+		if p.cur().Token == SemicolonToken {
 			p.index++
 			continue
 		}
 
 		// Ignore space token, not needed anymore
-		if tokens[p.index].Token == SpaceToken {
+		if p.cur().Token == SpaceToken {
 			p.index++
 			continue
 		}
@@ -88,16 +51,16 @@ func (p *parser) parse(tokens []Token) ([]Instruction, error) {
 		// Create a logical tree of all tokens
 		// We start with first order query
 		// CREATE, SELECT, INSERT, UPDATE, DELETE, TRUNCATE, DROP, EXPLAIN
-		switch tokens[p.index].Token {
+		switch p.cur().Token {
 		case CreateToken:
-			i, err := p.parseCreate(tokens)
+			i, err := p.parseCreate()
 			if err != nil {
 				return nil, err
 			}
 			p.i = append(p.i, *i)
 			break
 		case SelectToken:
-			i, err := p.parseSelect(tokens)
+			i, err := p.parseSelect()
 			if err != nil {
 				return nil, err
 			}
@@ -147,7 +110,7 @@ func (p *parser) parse(tokens []Token) ([]Instruction, error) {
 			p.i = append(p.i, *i)
 			return p.i, nil
 		default:
-			return nil, fmt.Errorf("Parsing error near <%s>", tokens[p.index].Lexeme)
+			return nil, fmt.Errorf("Parsing error near <%s>", p.cur().Lexeme)
 		}
 	}
 
@@ -180,7 +143,7 @@ func (p *parser) parseUpdate() (*Instruction, error) {
 
 	// should be a list of equality
 	gotClause := false
-	for p.tokens[p.index].Token != WhereToken {
+	for p.cur().Token != WhereToken {
 
 		if !p.hasNext() && gotClause {
 			break
@@ -655,7 +618,7 @@ func (p *parser) parseValue() (*Decl, error) {
 
 	if p.is(SimpleQuoteToken) || p.is(DoubleQuoteToken) {
 		quoted = true
-		debug("value %v is quoted!", p.tokens[p.index])
+		debug("value %v is quoted!", p.cur())
 		_, err := p.consumeToken(SimpleQuoteToken, DoubleQuoteToken)
 		if err != nil {
 			return nil, err
@@ -664,13 +627,13 @@ func (p *parser) parseValue() (*Decl, error) {
 
 	valueDecl, err := p.consumeToken(StringToken, NumberToken, DateToken, NowToken, LocalTimestampToken)
 	if err != nil {
-		debug("parseValue: Wasn't expecting %v\n", p.tokens[p.index])
+		debug("parseValue: Wasn't expecting %v\n", p.cur())
 		return nil, err
 	}
 	log.Debug("Parsing value %v !\n", valueDecl)
 
 	if quoted {
-		log.Debug("consume quote %v\n", p.tokens[p.index])
+		log.Debug("consume quote %v\n", p.cur())
 		_, err := p.consumeToken(SimpleQuoteToken, DoubleQuoteToken)
 		if err != nil {
 			debug("uuuh, wasn't a quote")
@@ -760,19 +723,32 @@ func (p *parser) parseListElement() (*Decl, error) {
 	return valueDecl, nil
 }
 
+func (p *parser) hasNext() bool {
+	if p.index+1 < p.tokenLen {
+		return true
+	}
+	return false
+}
+
 func (p *parser) next() error {
 	if !p.hasNext() {
-		return fmt.Errorf("Unexpected end")
+		return fmt.Errorf("Unexpected end of tokens")
 	}
+
 	p.index++
 	return nil
 }
 
-func (p *parser) hasNext() bool {
-	if p.index+1 < len(p.tokens) {
-		return true
-	}
-	return false
+func (p *parser) peekBackward() Token {
+	return p.tokens[p.index-1]
+}
+
+func (p *parser) cur() Token {
+	return p.tokens[p.index]
+}
+
+func (p *parser) peekForward() Token {
+	return p.tokens[p.index+1]
 }
 
 func (p *parser) is(tokenTypes ...int) bool {
@@ -799,8 +775,8 @@ func (p *parser) isNext(tokenTypes ...int) (t Token, err error) {
 
 	debug("parser.isNext %v", tokenTypes)
 	for _, tokenType := range tokenTypes {
-		if p.tokens[p.index+1].Token == tokenType {
-			return p.tokens[p.index+1], nil
+		if p.peekForward().Token == tokenType {
+			return p.peekForward(), nil
 		}
 	}
 
@@ -823,16 +799,12 @@ func (p *parser) mustHaveNext(tokenTypes ...int) (t Token, err error) {
 	debug("parser.mustHaveNext %v", tokenTypes)
 	for _, tokenType := range tokenTypes {
 		if p.is(tokenType) {
-			return p.tokens[p.index], nil
+			return p.cur(), nil
 		}
 	}
 
 	debug("parser.mustHaveNext: Next (%v) is not among %v", p.cur(), tokenTypes)
 	return t, p.syntaxError()
-}
-
-func (p *parser) cur() Token {
-	return p.tokens[p.index]
 }
 
 func (p *parser) consumeToken(tokenTypes ...int) (*Decl, error) {
@@ -841,25 +813,28 @@ func (p *parser) consumeToken(tokenTypes ...int) (*Decl, error) {
 		return nil, p.syntaxError()
 	}
 
-	decl := NewDecl(p.tokens[p.index])
+	decl := NewDecl(p.cur())
 	p.next()
 	return decl, nil
 }
 
 func (p *parser) syntaxError() error {
 	if p.index == 0 {
-		return fmt.Errorf("Syntax error near %v %v", p.tokens[p.index].Lexeme, p.tokens[p.index+1].Lexeme)
+		return fmt.Errorf("Syntax error near %v %v", p.cur().Lexeme, p.peekForward().Lexeme)
 	} else if !p.hasNext() {
-		return fmt.Errorf("Syntax error near %v %v", p.tokens[p.index-1].Lexeme, p.tokens[p.index].Lexeme)
+		return fmt.Errorf("Syntax error near %v %v", p.peekBackward().Lexeme, p.cur().Lexeme)
 	}
-	return fmt.Errorf("Syntax error near %v %v %v", p.tokens[p.index-1].Lexeme, p.tokens[p.index].Lexeme, p.tokens[p.index+1].Lexeme)
+	return fmt.Errorf("Syntax error near %v %v %v", p.peekBackward().Lexeme, p.cur().Lexeme, p.peekForward().Lexeme)
 }
 
-func stripSpaces(t []Token) (ret []Token) {
+func stripSpaces(t []Token) []Token {
+	ret_t := []Token{}
+
 	for i := range t {
 		if t[i].Token != SpaceToken {
-			ret = append(ret, t[i])
+			ret_t = append(ret_t, t[i])
 		}
 	}
-	return ret
+
+	return ret_t
 }

@@ -4,12 +4,12 @@ import (
 	"fmt"
 )
 
-func (p *parser) parseSelect(tokens []Token) (*Instruction, error) {
+func (p *parser) parseSelect() (*Instruction, error) {
 	i := &Instruction{}
 	var err error
 
 	// Create select decl
-	selectDecl := NewDecl(tokens[p.index])
+	selectDecl := NewDecl(p.cur())
 	i.Decls = append(i.Decls, selectDecl)
 
 	// After select token, should be either
@@ -46,17 +46,17 @@ func (p *parser) parseSelect(tokens []Token) (*Instruction, error) {
 	}
 
 	// Must be from now
-	if tokens[p.index].Token != FromToken {
-		return nil, fmt.Errorf("Syntax error near %v\n", tokens[p.index])
+	if p.cur().Token != FromToken {
+		return nil, fmt.Errorf("Syntax error near %v\n", p.cur())
 	}
-	fromDecl := NewDecl(tokens[p.index])
+	fromDecl := NewDecl(p.cur())
 	selectDecl.Add(fromDecl)
 
 	// Now must be a list of table
 	for {
 		// string
 		if err = p.next(); err != nil {
-			return nil, fmt.Errorf("Unexpected end. Syntax error near %v\n", tokens[p.index])
+			return nil, fmt.Errorf("Unexpected end. Syntax error near %v\n", p.cur())
 		}
 		tableNameDecl, err := p.parseAttribute()
 		if err != nil {
@@ -70,7 +70,7 @@ func (p *parser) parseSelect(tokens []Token) (*Instruction, error) {
 			return i, nil
 		}
 		// if not comma, break
-		if tokens[p.index].Token != CommaToken {
+		if p.cur().Token != CommaToken {
 			break // No more table
 		}
 	}
