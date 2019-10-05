@@ -16,7 +16,8 @@ type lexer struct {
 
 // SQL Tokens
 const (
-	AndToken            = iota // Second-order
+	ActionToken         = iota // Second-order
+	AndToken                   // Second-order
 	AscToken                   // Second-order
 	AutoincrementToken         // Second-order
 	BacktickToken              // Punctuation
@@ -24,9 +25,11 @@ const (
 	BracketOpeningToken        // Punctuation
 	BtreeToken                 // Second-order
 	ByToken                    // Second-order
+	CascadeToken               // Second-order
 	CharacterToken             // Second-order
 	CharsetToken               // Second-order
 	CommaToken                 // Punctuation
+	ConstraintToken            // Second-order
 	CountToken                 // Second-order
 	CreateToken                // First-order
 	DateToken                  // Type
@@ -41,7 +44,9 @@ const (
 	ExplainToken               // First-order
 	FalseToken                 // Second-order
 	ForToken                   // Second-order
+	ForeignToken               // Second-order
 	FromToken                  // Second-order
+	FullToken                  // Second-order
 	GrantToken                 // First-order
 	GreaterOrEqualToken        // Punctuation
 	HashToken                  // Second-order
@@ -58,6 +63,8 @@ const (
 	LessOrEqualToken           // Punctuation
 	LimitToken                 // Second-order
 	LocalTimestampToken        // Second-order
+	MatchToken                 // Second-order
+	NoToken                    // Second-order
 	NotToken                   // Second-order
 	NowToken                   // Second-order
 	NullToken                  // Second-order
@@ -66,13 +73,17 @@ const (
 	OnToken                    // Second-order
 	OrToken                    // Second-order
 	OrderToken                 // Second-order
+	PartialToken               // Quote
 	PeriodToken                // Quote
 	PrimaryToken               // Type
+	ReferencesToken            // Second-order
 	ReturningToken             // Second-order
+	RestrictToken              // Second-order
 	RightDipleToken            // Punctuation
 	SelectToken                // First-order
 	SemicolonToken             // Punctuation
 	SetToken                   // Second-order
+	SimpleToken                // Second-order
 	SimpleQuoteToken           // Quote
 	SpaceToken                 // Punctuation
 	StarToken                  // Quote
@@ -105,13 +116,16 @@ type Matcher func() bool
 //go:generate ./lexer-generate-matcher.sh --lexeme ">" --name RightDiple
 //go:generate ./lexer-generate-matcher.sh --lexeme ">=" --name GreaterOrEqual
 //go:generate ./lexer-generate-matcher.sh --lexeme "`" --name Backtick
+//go:generate ./lexer-generate-matcher.sh --lexeme "action"
 //go:generate ./lexer-generate-matcher.sh --lexeme "and"
 //go:generate ./lexer-generate-matcher.sh --lexeme "asc"
 //go:generate ./lexer-generate-matcher.sh --lexeme "autoincrement" --lexeme "auto_increment"
 //go:generate ./lexer-generate-matcher.sh --lexeme "btree"
 //go:generate ./lexer-generate-matcher.sh --lexeme "by"
+//go:generate ./lexer-generate-matcher.sh --lexeme "cascade"
 //go:generate ./lexer-generate-matcher.sh --lexeme "character"
 //go:generate ./lexer-generate-matcher.sh --lexeme "charset"
+//go:generate ./lexer-generate-matcher.sh --lexeme "constraint"
 //go:generate ./lexer-generate-matcher.sh --lexeme "count"
 //go:generate ./lexer-generate-matcher.sh --lexeme "create"
 //go:generate ./lexer-generate-matcher.sh --lexeme "default"
@@ -122,7 +136,9 @@ type Matcher func() bool
 //go:generate ./lexer-generate-matcher.sh --lexeme "exists"
 //go:generate ./lexer-generate-matcher.sh --lexeme "false"
 //go:generate ./lexer-generate-matcher.sh --lexeme "for"
+//go:generate ./lexer-generate-matcher.sh --lexeme "foreign"
 //go:generate ./lexer-generate-matcher.sh --lexeme "from"
+//go:generate ./lexer-generate-matcher.sh --lexeme "full"
 //go:generate ./lexer-generate-matcher.sh --lexeme "grant"
 //go:generate ./lexer-generate-matcher.sh --lexeme "hash"
 //go:generate ./lexer-generate-matcher.sh --lexeme "if"
@@ -135,6 +151,8 @@ type Matcher func() bool
 //go:generate ./lexer-generate-matcher.sh --lexeme "key"
 //go:generate ./lexer-generate-matcher.sh --lexeme "limit"
 //go:generate ./lexer-generate-matcher.sh --lexeme "localtimestamp" --lexeme "current_timestamp" --name LocalTimestamp
+//go:generate ./lexer-generate-matcher.sh --lexeme "match"
+//go:generate ./lexer-generate-matcher.sh --lexeme "no"
 //go:generate ./lexer-generate-matcher.sh --lexeme "not"
 //go:generate ./lexer-generate-matcher.sh --lexeme "now()" --name Now
 //go:generate ./lexer-generate-matcher.sh --lexeme "null"
@@ -142,10 +160,14 @@ type Matcher func() bool
 //go:generate ./lexer-generate-matcher.sh --lexeme "on"
 //go:generate ./lexer-generate-matcher.sh --lexeme "or"
 //go:generate ./lexer-generate-matcher.sh --lexeme "order"
+//go:generate ./lexer-generate-matcher.sh --lexeme "partial"
 //go:generate ./lexer-generate-matcher.sh --lexeme "primary"
+//go:generate ./lexer-generate-matcher.sh --lexeme "references"
+//go:generate ./lexer-generate-matcher.sh --lexeme "restrict"
 //go:generate ./lexer-generate-matcher.sh --lexeme "returning"
 //go:generate ./lexer-generate-matcher.sh --lexeme "select"
 //go:generate ./lexer-generate-matcher.sh --lexeme "set"
+//go:generate ./lexer-generate-matcher.sh --lexeme "simple"
 //go:generate ./lexer-generate-matcher.sh --lexeme "table"
 //go:generate ./lexer-generate-matcher.sh --lexeme "time"
 //go:generate ./lexer-generate-matcher.sh --lexeme "truncate"
@@ -177,64 +199,75 @@ func (l *lexer) lex(instruction []byte) ([]Token, error) {
 	matchers = append(matchers, l.MatchPeriodToken)
 	matchers = append(matchers, l.MatchDoubleQuoteToken)
 	matchers = append(matchers, l.MatchLessOrEqualToken)
-	matchers = append(matchers, l.MatchGreaterOrEqualToken)
 	matchers = append(matchers, l.MatchLeftDipleToken)
+	matchers = append(matchers, l.MatchGreaterOrEqualToken)
 	matchers = append(matchers, l.MatchRightDipleToken)
 	matchers = append(matchers, l.MatchBacktickToken)
 	// First order Matcher
 	matchers = append(matchers, l.MatchCreateToken)
-	matchers = append(matchers, l.MatchSelectToken)
-	matchers = append(matchers, l.MatchInsertToken)
-	matchers = append(matchers, l.MatchUpdateToken)
 	matchers = append(matchers, l.MatchDeleteToken)
-	matchers = append(matchers, l.MatchTruncateToken)
 	matchers = append(matchers, l.MatchDropToken)
 	matchers = append(matchers, l.MatchGrantToken)
+	matchers = append(matchers, l.MatchInsertToken)
+	matchers = append(matchers, l.MatchSelectToken)
+	matchers = append(matchers, l.MatchTruncateToken)
+	matchers = append(matchers, l.MatchUpdateToken)
 	// Second order Matcher
-	matchers = append(matchers, l.MatchTableToken)
-	matchers = append(matchers, l.MatchFromToken)
-	matchers = append(matchers, l.MatchWhereToken)
-	matchers = append(matchers, l.MatchIntoToken)
-	matchers = append(matchers, l.MatchValuesToken)
-	matchers = append(matchers, l.MatchJoinToken)
-	matchers = append(matchers, l.MatchOnToken)
-	matchers = append(matchers, l.MatchIfToken)
-	matchers = append(matchers, l.MatchNotToken)
-	matchers = append(matchers, l.MatchExistsToken)
-	matchers = append(matchers, l.MatchNullToken)
-	matchers = append(matchers, l.MatchAutoincrementToken)
-	matchers = append(matchers, l.MatchCountToken)
-	matchers = append(matchers, l.MatchSetToken)
-	matchers = append(matchers, l.MatchOrderToken)
-	matchers = append(matchers, l.MatchByToken)
-	matchers = append(matchers, l.MatchWithToken)
-	matchers = append(matchers, l.MatchTimeToken)
-	matchers = append(matchers, l.MatchZoneToken)
-	matchers = append(matchers, l.MatchReturningToken)
-	matchers = append(matchers, l.MatchInToken)
+	matchers = append(matchers, l.MatchActionToken)
 	matchers = append(matchers, l.MatchAndToken)
-	matchers = append(matchers, l.MatchOrToken)
 	matchers = append(matchers, l.MatchAscToken)
-	matchers = append(matchers, l.MatchDescToken)
-	matchers = append(matchers, l.MatchLimitToken)
-	matchers = append(matchers, l.MatchIsToken)
-	matchers = append(matchers, l.MatchForToken)
-	matchers = append(matchers, l.MatchDefaultToken)
-	matchers = append(matchers, l.MatchLocalTimestampToken)
-	matchers = append(matchers, l.MatchFalseToken)
-	matchers = append(matchers, l.MatchUniqueToken)
-	matchers = append(matchers, l.MatchNowToken)
-	matchers = append(matchers, l.MatchOffsetToken)
-	matchers = append(matchers, l.MatchEngineToken)
-	matchers = append(matchers, l.MatchCharsetToken)
-	matchers = append(matchers, l.MatchCharacterToken)
-	matchers = append(matchers, l.MatchIndexToken)
-	matchers = append(matchers, l.MatchUsingToken)
+	matchers = append(matchers, l.MatchAutoincrementToken)
 	matchers = append(matchers, l.MatchBtreeToken)
+	matchers = append(matchers, l.MatchByToken)
+	matchers = append(matchers, l.MatchCascadeToken)
+	matchers = append(matchers, l.MatchCharacterToken)
+	matchers = append(matchers, l.MatchCharsetToken)
+	matchers = append(matchers, l.MatchConstraintToken)
+	matchers = append(matchers, l.MatchCountToken)
+	matchers = append(matchers, l.MatchDefaultToken)
+	matchers = append(matchers, l.MatchDescToken)
+	matchers = append(matchers, l.MatchEngineToken)
+	matchers = append(matchers, l.MatchExistsToken)
+	matchers = append(matchers, l.MatchFalseToken)
+	matchers = append(matchers, l.MatchForeignToken)
+	matchers = append(matchers, l.MatchForToken)
+	matchers = append(matchers, l.MatchFromToken)
+	matchers = append(matchers, l.MatchFullToken)
 	matchers = append(matchers, l.MatchHashToken)
-	// Type Matcher
-	matchers = append(matchers, l.MatchPrimaryToken)
+	matchers = append(matchers, l.MatchIfToken)
+	matchers = append(matchers, l.MatchIndexToken)
+	matchers = append(matchers, l.MatchIntoToken)
+	matchers = append(matchers, l.MatchInToken)
+	matchers = append(matchers, l.MatchIsToken)
+	matchers = append(matchers, l.MatchJoinToken)
 	matchers = append(matchers, l.MatchKeyToken)
+	matchers = append(matchers, l.MatchLimitToken)
+	matchers = append(matchers, l.MatchLocalTimestampToken)
+	matchers = append(matchers, l.MatchMatchToken)
+	matchers = append(matchers, l.MatchNotToken)
+	matchers = append(matchers, l.MatchNowToken)
+	matchers = append(matchers, l.MatchNoToken)
+	matchers = append(matchers, l.MatchNullToken)
+	matchers = append(matchers, l.MatchOffsetToken)
+	matchers = append(matchers, l.MatchOnToken)
+	matchers = append(matchers, l.MatchOrderToken)
+	matchers = append(matchers, l.MatchOrToken)
+	matchers = append(matchers, l.MatchPartialToken)
+	matchers = append(matchers, l.MatchPrimaryToken)
+	matchers = append(matchers, l.MatchReferencesToken)
+	matchers = append(matchers, l.MatchRestrictToken)
+	matchers = append(matchers, l.MatchReturningToken)
+	matchers = append(matchers, l.MatchSetToken)
+	matchers = append(matchers, l.MatchSimpleToken)
+	matchers = append(matchers, l.MatchTableToken)
+	matchers = append(matchers, l.MatchTimeToken)
+	matchers = append(matchers, l.MatchUniqueToken)
+	matchers = append(matchers, l.MatchUsingToken)
+	matchers = append(matchers, l.MatchValuesToken)
+	matchers = append(matchers, l.MatchWhereToken)
+	matchers = append(matchers, l.MatchWithToken)
+	matchers = append(matchers, l.MatchZoneToken)
+	// Type Matcher
 	matchers = append(matchers, l.MatchEscapedStringToken)
 	matchers = append(matchers, l.MatchDateToken)
 	matchers = append(matchers, l.MatchNumberToken)

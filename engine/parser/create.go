@@ -88,9 +88,28 @@ func (p *parser) parseTable() (*Decl, error) {
 			break
 		}
 
-		// PRIMARY KEY ( <INDEX-KEY> [, ...] )
-		if p.cur().Token == PrimaryToken {
+		// (CONSTRAINT <CONSTRAINT-NAME>?)? ...
+		if p.cur().Token == ConstraintToken {
+			_, err := p.parseTableConstraint()
+			if err != nil {
+				return nil, err
+			}
+
+			// PRIMARY KEY ( <INDEX-KEY> [, ...] )
+		} else if p.cur().Token == PrimaryToken {
 			_, err := p.parsePrimaryKey()
+			if err != nil {
+				return nil, err
+			}
+
+			// UNIQUE [INDEX | KEY] ...
+		} else if p.cur().Token == UniqueToken {
+			_, err := p.consumeToken(UniqueToken)
+			if err != nil {
+				return nil, err
+			}
+
+			_, err = p.parseTableIndex()
 			if err != nil {
 				return nil, err
 			}
@@ -98,6 +117,13 @@ func (p *parser) parseTable() (*Decl, error) {
 			// { INDEX | KEY } [ index_name ] [?:index_type USING { BTREE | HASH } ] '(' { col_name [ '(' length ')' ] | '(' expr ')' } [ ASC | DESC ] ',' ... ')' [?:index_option ... ]
 		} else if p.cur().Token == IndexToken || p.cur().Token == KeyToken {
 			_, err := p.parseTableIndex()
+			if err != nil {
+				return nil, err
+			}
+
+			// FOREIGN KEY ...
+		} else if p.cur().Token == ForeignToken {
+			_, err := p.parseTableForeignKey()
 			if err != nil {
 				return nil, err
 			}
@@ -374,6 +400,51 @@ tableOptions:
 	return tableDecl, nil
 }
 
+// parseTableConstraint processes tokens that should define a table constraint
+// CONSTRAINT <CONSTRAINT-NAME>? ...
+func (p *parser) parseTableConstraint() (*Decl, error) {
+	constraintDecl, err := p.consumeToken(ConstraintToken)
+	if err != nil {
+		return nil, err
+	}
+
+	// Optional: <CONSTRAINT-NAME>
+	if p.is(StringToken) {
+		_, err := p.consumeToken(StringToken)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	switch p.cur().Token {
+	case PrimaryToken:
+		_, err := p.parsePrimaryKey()
+		if err != nil {
+			return nil, err
+		}
+	case UniqueToken:
+		_, err := p.consumeToken(UniqueToken)
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = p.parseTableIndex()
+		if err != nil {
+			return nil, err
+		}
+	case ForeignToken:
+		_, err := p.parseTableForeignKey()
+		if err != nil {
+			return nil, err
+		}
+	default:
+		// Unknown constraint type
+		return nil, p.syntaxError()
+	}
+
+	return constraintDecl, nil
+}
+
 func (p *parser) parsePrimaryKey() (*Decl, error) {
 	primaryDecl, err := p.consumeToken(PrimaryToken)
 	if err != nil {
@@ -478,4 +549,222 @@ func (p *parser) parseTableIndex() (*Decl, error) {
 	}
 
 	return indexDecl, nil
+}
+
+// parseTableForeignKey processes tokens that should define a table foreign key
+// FOREIGN KEY ...
+func (p *parser) parseTableForeignKey() (*Decl, error) {
+	// Required: FOREIGN
+	foreignDecl, err := p.consumeToken(ForeignToken)
+	if err != nil {
+		return nil, err
+	}
+
+	// Required: KEY
+	keyDecl, err := p.consumeToken(KeyToken)
+	if err != nil {
+		return nil, err
+	}
+	foreignDecl.Add(keyDecl)
+
+	// Optional: <FK-NAME>
+	if p.is(StringToken) {
+		_, err := p.consumeToken(StringToken)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Required: '('
+	_, err = p.consumeToken(BracketOpeningToken)
+	if err != nil {
+		return nil, err
+	}
+
+	// Required: <FK-INDEX> [, <FK-INDEX>]* ')'
+	for {
+		_, err := p.consumeToken(StringToken)
+		if err != nil {
+			return nil, err
+		}
+
+		n, err := p.consumeToken(CommaToken, BracketClosingToken)
+		if err != nil {
+			return nil, err
+		}
+		if n.Token == BracketClosingToken {
+			break
+		}
+	}
+
+	// Optional: REFERENCES ...
+	if p.is(ReferencesToken) {
+		_, err := p.parseTableReference()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return foreignDecl, nil
+}
+
+// parseTableReference processes tokens that should define a table reference
+// REFERENCES ...
+func (p *parser) parseTableReference() (*Decl, error) {
+	// Required: REFERENCES
+	referencesDecl, err := p.consumeToken(ReferencesToken)
+	if err != nil {
+		return nil, err
+	}
+
+	// Required: <TABLE-NAME>
+	_, err = p.consumeToken(StringToken)
+	if err != nil {
+		return nil, err
+	}
+
+	// Required: '('
+	_, err = p.consumeToken(BracketOpeningToken)
+	if err != nil {
+		return nil, err
+	}
+
+	// Required: <KEY-PART> [, <KEY-PART>]* ')'
+	for {
+		_, err := p.consumeToken(StringToken)
+		if err != nil {
+			return nil, err
+		}
+
+		n, err := p.consumeToken(CommaToken, BracketClosingToken)
+		if err != nil {
+			return nil, err
+		}
+		if n.Token == BracketClosingToken {
+			break
+		}
+	}
+
+	// Optional: MATCH ...
+	if p.is(MatchToken) {
+		_, err := p.consumeToken(MatchToken)
+		if err != nil {
+			return nil, err
+		}
+
+		switch p.cur().Token {
+		case FullToken:
+			_, err := p.consumeToken(FullToken)
+			if err != nil {
+				return nil, err
+			}
+		case PartialToken:
+			_, err := p.consumeToken(PartialToken)
+			if err != nil {
+				return nil, err
+			}
+		case SimpleToken:
+			_, err := p.consumeToken(SimpleToken)
+			if err != nil {
+				return nil, err
+			}
+		default:
+			// Unknown match type
+			return nil, p.syntaxError()
+		}
+	}
+
+	// Optional: ON ...
+	if p.is(OnToken) {
+		_, err := p.consumeToken(OnToken)
+		if err != nil {
+			return nil, err
+		}
+
+		switch p.cur().Token {
+		case UpdateToken:
+			_, err := p.consumeToken(UpdateToken)
+			if err != nil {
+				return nil, err
+			}
+
+			_, err = p.parseTableReferenceOption()
+			if err != nil {
+				return nil, err
+			}
+		case DeleteToken:
+			_, err := p.consumeToken(DeleteToken)
+			if err != nil {
+				return nil, err
+			}
+
+			_, err = p.parseTableReferenceOption()
+			if err != nil {
+				return nil, err
+			}
+		default:
+			// Unknown on reference option type
+			return nil, p.syntaxError()
+		}
+	}
+
+	return referencesDecl, nil
+}
+
+// parseTableReferenceOption processes tokens that should define a table reference option
+func (p *parser) parseTableReferenceOption() (*Decl, error) {
+	switch p.cur().Token {
+	case RestrictToken:
+		d, err := p.consumeToken(RestrictToken)
+		if err != nil {
+			return nil, err
+		}
+		return d, nil
+	case CascadeToken:
+		d, err := p.consumeToken(CascadeToken)
+		if err != nil {
+			return nil, err
+		}
+		return d, nil
+	case SetToken:
+		d, err := p.consumeToken(SetToken)
+		if err != nil {
+			return nil, err
+		}
+
+		switch p.cur().Token {
+		case NullToken:
+			n, err := p.consumeToken(NullToken)
+			if err != nil {
+				return nil, err
+			}
+			d.Add(n)
+			return d, nil
+		case DefaultToken:
+			n, err := p.consumeToken(DefaultToken)
+			if err != nil {
+				return nil, err
+			}
+			d.Add(n)
+			return d, nil
+		default:
+			// Unknown option
+			return nil, p.syntaxError()
+		}
+	case NoToken:
+		d, err := p.consumeToken(NoToken)
+		if err != nil {
+			return nil, err
+		}
+
+		n, err := p.consumeToken(ActionToken)
+		if err != nil {
+			return nil, err
+		}
+		d.Add(n)
+		return d, nil
+	default:
+		// Unknown option type
+		return nil, p.syntaxError()
+	}
 }

@@ -46,28 +46,58 @@ func TestParserCreateTableWithDefaultOnUpdateConstraints(t *testing.T) {
 	parse(query, 1, t)
 }
 
-func TestParserCreateTableWithIndexNoNameNoType(t *testing.T) {
+func TestParserCreateTableWithConstraintPrimaryKey(t *testing.T) {
+	query := `CREATE TABLE account (id BIGINT NOT NULL AUTO_INCREMENT, name TEXT NOT NULL, PRIMARY KEY (id))`
+	parse(query, 1, t)
+}
+
+func TestParserCreateTableWithConstraintUniqueIndex(t *testing.T) {
+	query := `CREATE TABLE account (id BIGINT NOT NULL AUTO_INCREMENT, name TEXT NOT NULL, UNIQUE INDEX (id))`
+	parse(query, 1, t)
+}
+
+func TestParserCreateTableWithConstraintUniqueKey(t *testing.T) {
+	query := `CREATE TABLE account (id BIGINT NOT NULL AUTO_INCREMENT, name TEXT NOT NULL, UNIQUE KEY (id))`
+	parse(query, 1, t)
+}
+
+func TestParserCreateTableWithConstraintIndexNoNameNoType(t *testing.T) {
 	query := `CREATE TABLE account (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, name TEXT NOT NULL, INDEX (name))`
 	parse(query, 1, t)
 }
 
-func TestParserCreateTableWithIndexNoType(t *testing.T) {
+func TestParserCreateTableWithConstraintIndexNoType(t *testing.T) {
 	query := `CREATE TABLE account (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, name TEXT NOT NULL, INDEX name_idx (name))`
 	parse(query, 1, t)
 }
 
-func TestParserCreateTableWithIndexNoNameTypeBtree(t *testing.T) {
+func TestParserCreateTableWithConstraintIndexNoNameTypeBtree(t *testing.T) {
 	query := `CREATE TABLE account (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, name TEXT NOT NULL, INDEX USING BTREE (name))`
 	parse(query, 1, t)
 }
 
-func TestParserCreateTableWithIndexNoNameTypeHash(t *testing.T) {
+func TestParserCreateTableWithConstraintIndexNoNameTypeHash(t *testing.T) {
 	query := `CREATE TABLE account (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, name TEXT NOT NULL, INDEX USING HASH (name))`
 	parse(query, 1, t)
 }
 
-func TestParserCreateTableWithIndexAll(t *testing.T) {
+func TestParserCreateTableWithConstraintIndexAll(t *testing.T) {
 	query := `CREATE TABLE account (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, name TEXT NOT NULL, INDEX name_idx USING BTREE (name))`
+	parse(query, 1, t)
+}
+
+func TestParserCreateTableWithConstraintForeignKeyNoName(t *testing.T) {
+	query := `CREATE TABLE account (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, name TEXT NOT NULL, FOREIGN KEY (name))`
+	parse(query, 1, t)
+}
+
+func TestParserCreateTableWithConstraintForeignKey(t *testing.T) {
+	query := `CREATE TABLE account (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, name TEXT NOT NULL, FOREIGN KEY name_idx (name))`
+	parse(query, 1, t)
+}
+
+func TestParserCreateTableWithConstraintForeignKeyWithReferences(t *testing.T) {
+	query := `CREATE TABLE account (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, name TEXT NOT NULL, FOREIGN KEY name_idx (name) REFERENCES user (name) ON DELETE CASCADE)`
 	parse(query, 1, t)
 }
 
