@@ -47,7 +47,7 @@ func (p *parser) parseSelect() (*Instruction, error) {
 
 	// Must be from now
 	if p.cur().Token != FromToken {
-		return nil, fmt.Errorf("Syntax error near %v\n", p.cur())
+		return nil, fmt.Errorf("Syntax error near %v", p.cur())
 	}
 	fromDecl := NewDecl(p.cur())
 	selectDecl.Add(fromDecl)
@@ -56,7 +56,7 @@ func (p *parser) parseSelect() (*Instruction, error) {
 	for {
 		// string
 		if err = p.next(); err != nil {
-			return nil, fmt.Errorf("Unexpected end. Syntax error near %v\n", p.cur())
+			return nil, fmt.Errorf("Unexpected end. Syntax error near %v", p.cur())
 		}
 		tableNameDecl, err := p.parseAttribute()
 		if err != nil {

@@ -828,13 +828,13 @@ func (p *parser) syntaxError() error {
 }
 
 func stripSpaces(t []Token) []Token {
-	ret_t := []Token{}
+	retT := []Token{}
 
 	for i := range t {
 		if t[i].Token != SpaceToken {
-			ret_t = append(ret_t, t[i])
+			retT = append(retT, t[i])
 		}
 	}
 
-	return ret_t
+	return retT
 }

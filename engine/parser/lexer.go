@@ -7,102 +7,6 @@ import (
 	"github.com/mlhoyt/ramsql/engine/log"
 )
 
-// SQL Tokens
-const (
-	// Punctuation token
-
-	SpaceToken = iota
-	SemicolonToken
-	CommaToken
-	BracketOpeningToken
-	BracketClosingToken
-	LeftDipleToken
-	RightDipleToken
-	LessOrEqualToken
-	GreaterOrEqualToken
-	BacktickToken
-
-	// QuoteToken
-
-	DoubleQuoteToken
-	SimpleQuoteToken
-	StarToken
-	EqualityToken
-	PeriodToken
-
-	// First order Token
-
-	CreateToken
-	SelectToken
-	InsertToken
-	UpdateToken
-	DeleteToken
-	ExplainToken
-	TruncateToken
-	DropToken
-	GrantToken
-
-	// Second order Token
-
-	FromToken
-	WhereToken
-	TableToken
-	IntoToken
-	ValuesToken
-	JoinToken
-	OnToken
-	IfToken
-	NotToken
-	ExistsToken
-	NullToken
-	AutoincrementToken
-	CountToken
-	SetToken
-	OrderToken
-	ByToken
-	WithToken
-	TimeToken
-	ZoneToken
-	ReturningToken
-	InToken
-	AndToken
-	OrToken
-	AscToken
-	DescToken
-	LimitToken
-	IsToken
-	ForToken
-	DefaultToken
-	LocalTimestampToken
-	FalseToken
-	UniqueToken
-	NowToken
-	OffsetToken
-	EngineToken
-	CharsetToken
-	CharacterToken
-	IndexToken
-	UsingToken
-	BtreeToken
-	HashToken
-
-	// Type Token
-
-	TextToken
-	IntToken
-	PrimaryToken
-	KeyToken
-	StringToken
-	NumberToken
-	DateToken
-)
-
-// Token struct holds token id and it's lexeme
-type Token struct {
-	Token  int
-	Lexeme string
-}
-
 type lexer struct {
 	tokens         []Token
 	instruction    []byte
@@ -110,8 +14,148 @@ type lexer struct {
 	pos            int
 }
 
+// SQL Tokens
+const (
+	AndToken            = iota // Second-order
+	AscToken                   // Second-order
+	AutoincrementToken         // Second-order
+	BacktickToken              // Punctuation
+	BracketClosingToken        // Punctuation
+	BracketOpeningToken        // Punctuation
+	BtreeToken                 // Second-order
+	ByToken                    // Second-order
+	CharacterToken             // Second-order
+	CharsetToken               // Second-order
+	CommaToken                 // Punctuation
+	CountToken                 // Second-order
+	CreateToken                // First-order
+	DateToken                  // Type
+	DefaultToken               // Second-order
+	DeleteToken                // First-order
+	DescToken                  // Second-order
+	DoubleQuoteToken           // Quote
+	DropToken                  // First-order
+	EngineToken                // Second-order
+	EqualityToken              // Quote
+	ExistsToken                // Second-order
+	ExplainToken               // First-order
+	FalseToken                 // Second-order
+	ForToken                   // Second-order
+	FromToken                  // Second-order
+	GrantToken                 // First-order
+	GreaterOrEqualToken        // Punctuation
+	HashToken                  // Second-order
+	IfToken                    // Second-order
+	InToken                    // Second-order
+	IndexToken                 // Second-order
+	InsertToken                // First-order
+	IntToken                   // Type
+	IntoToken                  // Second-order
+	IsToken                    // Second-order
+	JoinToken                  // Second-order
+	KeyToken                   // Type
+	LeftDipleToken             // Punctuation
+	LessOrEqualToken           // Punctuation
+	LimitToken                 // Second-order
+	LocalTimestampToken        // Second-order
+	NotToken                   // Second-order
+	NowToken                   // Second-order
+	NullToken                  // Second-order
+	NumberToken                // Type
+	OffsetToken                // Second-order
+	OnToken                    // Second-order
+	OrToken                    // Second-order
+	OrderToken                 // Second-order
+	PeriodToken                // Quote
+	PrimaryToken               // Type
+	ReturningToken             // Second-order
+	RightDipleToken            // Punctuation
+	SelectToken                // First-order
+	SemicolonToken             // Punctuation
+	SetToken                   // Second-order
+	SimpleQuoteToken           // Quote
+	SpaceToken                 // Punctuation
+	StarToken                  // Quote
+	StringToken                // Type
+	TableToken                 // Second-order
+	TextToken                  // Type
+	TimeToken                  // Second-order
+	TruncateToken              // First-order
+	UniqueToken                // Second-order
+	UpdateToken                // First-order
+	UsingToken                 // Second-order
+	ValuesToken                // Second-order
+	WhereToken                 // Second-order
+	WithToken                  // Second-order
+	ZoneToken                  // Second-order
+)
+
 // Matcher tries to match given string to an SQL token
 type Matcher func() bool
+
+//go:generate ./lexer-generate-matcher.sh --lexeme "(" --name BracketOpening
+//go:generate ./lexer-generate-matcher.sh --lexeme ")" --name BracketClosing
+//go:generate ./lexer-generate-matcher.sh --lexeme "*" --name Star
+//go:generate ./lexer-generate-matcher.sh --lexeme "," --name Comma
+//go:generate ./lexer-generate-matcher.sh --lexeme "." --name Period
+//go:generate ./lexer-generate-matcher.sh --lexeme ";" --name Semicolon
+//go:generate ./lexer-generate-matcher.sh --lexeme "<" --name LeftDiple
+//go:generate ./lexer-generate-matcher.sh --lexeme "<=" --name LessOrEqual
+//go:generate ./lexer-generate-matcher.sh --lexeme "=" --name Equality
+//go:generate ./lexer-generate-matcher.sh --lexeme ">" --name RightDiple
+//go:generate ./lexer-generate-matcher.sh --lexeme ">=" --name GreaterOrEqual
+//go:generate ./lexer-generate-matcher.sh --lexeme "`" --name Backtick
+//go:generate ./lexer-generate-matcher.sh --lexeme "and"
+//go:generate ./lexer-generate-matcher.sh --lexeme "asc"
+//go:generate ./lexer-generate-matcher.sh --lexeme "autoincrement" --lexeme "auto_increment"
+//go:generate ./lexer-generate-matcher.sh --lexeme "btree"
+//go:generate ./lexer-generate-matcher.sh --lexeme "by"
+//go:generate ./lexer-generate-matcher.sh --lexeme "character"
+//go:generate ./lexer-generate-matcher.sh --lexeme "charset"
+//go:generate ./lexer-generate-matcher.sh --lexeme "count"
+//go:generate ./lexer-generate-matcher.sh --lexeme "create"
+//go:generate ./lexer-generate-matcher.sh --lexeme "default"
+//go:generate ./lexer-generate-matcher.sh --lexeme "delete"
+//go:generate ./lexer-generate-matcher.sh --lexeme "desc"
+//go:generate ./lexer-generate-matcher.sh --lexeme "drop"
+//go:generate ./lexer-generate-matcher.sh --lexeme "engine"
+//go:generate ./lexer-generate-matcher.sh --lexeme "exists"
+//go:generate ./lexer-generate-matcher.sh --lexeme "false"
+//go:generate ./lexer-generate-matcher.sh --lexeme "for"
+//go:generate ./lexer-generate-matcher.sh --lexeme "from"
+//go:generate ./lexer-generate-matcher.sh --lexeme "grant"
+//go:generate ./lexer-generate-matcher.sh --lexeme "hash"
+//go:generate ./lexer-generate-matcher.sh --lexeme "if"
+//go:generate ./lexer-generate-matcher.sh --lexeme "in"
+//go:generate ./lexer-generate-matcher.sh --lexeme "index"
+//go:generate ./lexer-generate-matcher.sh --lexeme "insert"
+//go:generate ./lexer-generate-matcher.sh --lexeme "into"
+//go:generate ./lexer-generate-matcher.sh --lexeme "is"
+//go:generate ./lexer-generate-matcher.sh --lexeme "join"
+//go:generate ./lexer-generate-matcher.sh --lexeme "key"
+//go:generate ./lexer-generate-matcher.sh --lexeme "limit"
+//go:generate ./lexer-generate-matcher.sh --lexeme "localtimestamp" --lexeme "current_timestamp" --name LocalTimestamp
+//go:generate ./lexer-generate-matcher.sh --lexeme "not"
+//go:generate ./lexer-generate-matcher.sh --lexeme "now()" --name Now
+//go:generate ./lexer-generate-matcher.sh --lexeme "null"
+//go:generate ./lexer-generate-matcher.sh --lexeme "offset"
+//go:generate ./lexer-generate-matcher.sh --lexeme "on"
+//go:generate ./lexer-generate-matcher.sh --lexeme "or"
+//go:generate ./lexer-generate-matcher.sh --lexeme "order"
+//go:generate ./lexer-generate-matcher.sh --lexeme "primary"
+//go:generate ./lexer-generate-matcher.sh --lexeme "returning"
+//go:generate ./lexer-generate-matcher.sh --lexeme "select"
+//go:generate ./lexer-generate-matcher.sh --lexeme "set"
+//go:generate ./lexer-generate-matcher.sh --lexeme "table"
+//go:generate ./lexer-generate-matcher.sh --lexeme "time"
+//go:generate ./lexer-generate-matcher.sh --lexeme "truncate"
+//go:generate ./lexer-generate-matcher.sh --lexeme "unique"
+//go:generate ./lexer-generate-matcher.sh --lexeme "update"
+//go:generate ./lexer-generate-matcher.sh --lexeme "using"
+//go:generate ./lexer-generate-matcher.sh --lexeme "values"
+//go:generate ./lexer-generate-matcher.sh --lexeme "where"
+//go:generate ./lexer-generate-matcher.sh --lexeme "with"
+//go:generate ./lexer-generate-matcher.sh --lexeme "zone"
 
 func (l *lexer) lex(instruction []byte) ([]Token, error) {
 	l.instructionLen = len(instruction)
@@ -237,215 +281,6 @@ func (l *lexer) MatchSpaceToken() bool {
 	return false
 }
 
-func (l *lexer) MatchNowToken() bool {
-	return l.Match([]byte("now()"), NowToken)
-}
-
-func (l *lexer) MatchUniqueToken() bool {
-	return l.Match([]byte("unique"), UniqueToken)
-}
-
-func (l *lexer) MatchLocalTimestampToken() bool {
-	return l.Match([]byte("localtimestamp"), LocalTimestampToken) ||
-		l.Match([]byte("current_timestamp"), LocalTimestampToken)
-}
-
-func (l *lexer) MatchDefaultToken() bool {
-	return l.Match([]byte("default"), DefaultToken)
-}
-
-func (l *lexer) MatchFalseToken() bool {
-	return l.Match([]byte("false"), FalseToken)
-}
-
-func (l *lexer) MatchAscToken() bool {
-	return l.Match([]byte("desc"), DescToken)
-}
-
-func (l *lexer) MatchDescToken() bool {
-	return l.Match([]byte("asc"), AscToken)
-}
-
-func (l *lexer) MatchAndToken() bool {
-	return l.Match([]byte("and"), AndToken)
-}
-
-func (l *lexer) MatchOrToken() bool {
-	return l.Match([]byte("or"), OrToken)
-}
-
-func (l *lexer) MatchInToken() bool {
-	return l.Match([]byte("in"), InToken)
-}
-
-func (l *lexer) MatchReturningToken() bool {
-	return l.Match([]byte("returning"), ReturningToken)
-}
-
-func (l *lexer) MatchTruncateToken() bool {
-	return l.Match([]byte("truncate"), TruncateToken)
-}
-
-func (l *lexer) MatchDropToken() bool {
-	return l.Match([]byte("drop"), DropToken)
-}
-
-func (l *lexer) MatchGrantToken() bool {
-	return l.Match([]byte("grant"), GrantToken)
-}
-
-func (l *lexer) MatchWithToken() bool {
-	return l.Match([]byte("with"), WithToken)
-}
-
-func (l *lexer) MatchTimeToken() bool {
-	return l.Match([]byte("time"), TimeToken)
-}
-
-func (l *lexer) MatchZoneToken() bool {
-	return l.Match([]byte("zone"), ZoneToken)
-}
-
-func (l *lexer) MatchIsToken() bool {
-	return l.Match([]byte("is"), IsToken)
-}
-
-func (l *lexer) MatchForToken() bool {
-	return l.Match([]byte("for"), ForToken)
-}
-
-func (l *lexer) MatchLimitToken() bool {
-	return l.Match([]byte("limit"), LimitToken)
-}
-
-func (l *lexer) MatchOrderToken() bool {
-	return l.Match([]byte("order"), OrderToken)
-}
-
-func (l *lexer) MatchByToken() bool {
-	return l.Match([]byte("by"), ByToken)
-}
-
-func (l *lexer) MatchSetToken() bool {
-	return l.Match([]byte("set"), SetToken)
-}
-
-func (l *lexer) MatchUpdateToken() bool {
-	return l.Match([]byte("update"), UpdateToken)
-}
-
-func (l *lexer) MatchCreateToken() bool {
-	return l.Match([]byte("create"), CreateToken)
-}
-
-func (l *lexer) MatchSelectToken() bool {
-	return l.Match([]byte("select"), SelectToken)
-}
-
-func (l *lexer) MatchInsertToken() bool {
-	return l.Match([]byte("insert"), InsertToken)
-}
-
-func (l *lexer) MatchWhereToken() bool {
-	return l.Match([]byte("where"), WhereToken)
-}
-
-func (l *lexer) MatchFromToken() bool {
-	return l.Match([]byte("from"), FromToken)
-}
-
-func (l *lexer) MatchTableToken() bool {
-	return l.Match([]byte("table"), TableToken)
-}
-
-func (l *lexer) MatchNullToken() bool {
-	return l.Match([]byte("null"), NullToken)
-}
-
-func (l *lexer) MatchIfToken() bool {
-	return l.Match([]byte("if"), IfToken)
-}
-
-func (l *lexer) MatchNotToken() bool {
-	return l.Match([]byte("not"), NotToken)
-}
-
-func (l *lexer) MatchExistsToken() bool {
-	return l.Match([]byte("exists"), ExistsToken)
-}
-
-func (l *lexer) MatchCountToken() bool {
-	return l.Match([]byte("count"), CountToken)
-}
-
-func (l *lexer) MatchDeleteToken() bool {
-	return l.Match([]byte("delete"), DeleteToken)
-}
-
-func (l *lexer) MatchAutoincrementToken() bool {
-	if l.Match([]byte("autoincrement"), AutoincrementToken) {
-		return true
-	}
-
-	return l.Match([]byte("auto_increment"), AutoincrementToken)
-}
-
-func (l *lexer) MatchPrimaryToken() bool {
-	return l.Match([]byte("primary"), PrimaryToken)
-}
-
-func (l *lexer) MatchKeyToken() bool {
-	return l.Match([]byte("key"), KeyToken)
-}
-
-func (l *lexer) MatchIntoToken() bool {
-	return l.Match([]byte("into"), IntoToken)
-}
-
-func (l *lexer) MatchValuesToken() bool {
-	return l.Match([]byte("values"), ValuesToken)
-}
-
-func (l *lexer) MatchJoinToken() bool {
-	return l.Match([]byte("join"), JoinToken)
-}
-
-func (l *lexer) MatchOnToken() bool {
-	return l.Match([]byte("on"), OnToken)
-}
-
-func (l *lexer) MatchOffsetToken() bool {
-	return l.Match([]byte("offset"), OffsetToken)
-}
-
-func (l *lexer) MatchEngineToken() bool {
-	return l.Match([]byte("engine"), EngineToken)
-}
-
-func (l *lexer) MatchCharsetToken() bool {
-	return l.Match([]byte("charset"), CharsetToken)
-}
-
-func (l *lexer) MatchCharacterToken() bool {
-	return l.Match([]byte("character"), CharacterToken)
-}
-
-func (l *lexer) MatchIndexToken() bool {
-	return l.Match([]byte("index"), IndexToken)
-}
-
-func (l *lexer) MatchUsingToken() bool {
-	return l.Match([]byte("using"), UsingToken)
-}
-
-func (l *lexer) MatchBtreeToken() bool {
-	return l.Match([]byte("btree"), BtreeToken)
-}
-
-func (l *lexer) MatchHashToken() bool {
-	return l.Match([]byte("hash"), HashToken)
-}
-
 func (l *lexer) MatchStringToken() bool {
 
 	i := l.pos
@@ -488,54 +323,6 @@ func (l *lexer) MatchNumberToken() bool {
 	}
 
 	return false
-}
-
-func (l *lexer) MatchSemicolonToken() bool {
-	return l.MatchSingle(';', SemicolonToken)
-}
-
-func (l *lexer) MatchPeriodToken() bool {
-	return l.MatchSingle('.', PeriodToken)
-}
-
-func (l *lexer) MatchBracketOpeningToken() bool {
-	return l.MatchSingle('(', BracketOpeningToken)
-}
-
-func (l *lexer) MatchBracketClosingToken() bool {
-	return l.MatchSingle(')', BracketClosingToken)
-}
-
-func (l *lexer) MatchCommaToken() bool {
-	return l.MatchSingle(',', CommaToken)
-}
-
-func (l *lexer) MatchStarToken() bool {
-	return l.MatchSingle('*', StarToken)
-}
-
-func (l *lexer) MatchEqualityToken() bool {
-	return l.MatchSingle('=', EqualityToken)
-}
-
-func (l *lexer) MatchLeftDipleToken() bool {
-	return l.MatchSingle('<', LeftDipleToken)
-}
-
-func (l *lexer) MatchRightDipleToken() bool {
-	return l.MatchSingle('>', RightDipleToken)
-}
-
-func (l *lexer) MatchLessOrEqualToken() bool {
-	return l.Match([]byte("<="), LessOrEqualToken)
-}
-
-func (l *lexer) MatchGreaterOrEqualToken() bool {
-	return l.Match([]byte(">="), GreaterOrEqualToken)
-}
-
-func (l *lexer) MatchBacktickToken() bool {
-	return l.MatchSingle('`', BacktickToken)
 }
 
 // 2015-09-10 14:03:09.444695269 +0200 CEST);
