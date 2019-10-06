@@ -37,6 +37,41 @@ func TestInsertTable(t *testing.T) {
 	}
 }
 
+func TestCreateAndInsertTableWithBacktickedKeyword(t *testing.T) {
+	log.UseTestLogger(t)
+
+	e := testEngine(t)
+	defer e.Stop()
+
+	query := `CREATE TABLE policy (
+      id INT PRIMARY KEY AUTO_INCREMENT,
+	    ` + "`action`" + ` TEXT,
+	    path TEXT
+	)`
+
+	i, err := parser.ParseInstruction(query)
+	if err != nil {
+		t.Fatalf("Cannot parse query %s : %s", query, err)
+	}
+
+	err = e.executeQuery(i[0], &TestEngineConn{})
+	if err != nil {
+		t.Fatalf("Cannot execute query: %s", err)
+	}
+
+	query = `INSERT INTO policy (id, ` + "`action`" + `, path) VALUES (0, 'GET', '/v1/customers')`
+
+	i, err = parser.ParseInstruction(query)
+	if err != nil {
+		t.Fatalf("Cannot parse query %s : %s", query, err)
+	}
+
+	err = e.executeQuery(i[0], &TestEngineConn{})
+	if err != nil {
+		t.Fatalf("Cannot execute query: %s", err)
+	}
+}
+
 func createTable(e *Engine, t *testing.T) {
 	query := `CREATE TABLE user (
       id INT PRIMARY KEY,

@@ -171,35 +171,36 @@ func (p *parser) parseUpdate() (*Instruction, error) {
 func (p *parser) parseInsert() (*Instruction, error) {
 	i := &Instruction{}
 
-	// Set INSERT decl
+	// Required: INSERT
 	insertDecl, err := p.consumeToken(InsertToken)
 	if err != nil {
 		return nil, err
 	}
 	i.Decls = append(i.Decls, insertDecl)
 
-	// should be INTO
+	// Required: INTO
 	intoDecl, err := p.consumeToken(IntoToken)
 	if err != nil {
 		return nil, err
 	}
 	insertDecl.Add(intoDecl)
 
-	// should be table Name
+	// Required: <TABLE-NAME>
 	tableDecl, err := p.parseQuotedToken()
 	if err != nil {
 		return nil, err
 	}
 	intoDecl.Add(tableDecl)
 
+	// Required: '('
 	_, err = p.consumeToken(BracketOpeningToken)
 	if err != nil {
 		return nil, err
 	}
 
-	// concerned attribute
+	// Required: <ATTRIBUTE-NAME> [, <ATTRIBUTE-NAME>]* ')'
 	for {
-		decl, err := p.parseListElement()
+		decl, err := p.parseQuotedToken()
 		if err != nil {
 			return nil, err
 		}
@@ -219,19 +220,20 @@ func (p *parser) parseInsert() (*Instruction, error) {
 		}
 	}
 
-	// should be VALUES
+	// Required: VALUES
 	valuesDecl, err := p.consumeToken(ValuesToken)
 	if err != nil {
 		return nil, err
 	}
 	insertDecl.Add(valuesDecl)
 
+	// Required: '('
 	_, err = p.consumeToken(BracketOpeningToken)
 	if err != nil {
 		return nil, err
 	}
 
-	// should be a list of values for specified attributes
+	// Required: <ATTRIBUTE-VALUE> [, <ATTRIBUTE-VALUE>]* ')'
 	for {
 		decl, err := p.parseListElement()
 		if err != nil {
@@ -250,7 +252,7 @@ func (p *parser) parseInsert() (*Instruction, error) {
 		}
 	}
 
-	// we may have `returning "something"` here
+	// Optional: RETURNING ...
 	if retDecl, err := p.consumeToken(ReturningToken); err == nil {
 		insertDecl.Add(retDecl)
 		attrDecl, err := p.parseAttribute()
@@ -466,14 +468,12 @@ func (p *parser) parseAttribute() (*Decl, error) {
 	return decl, nil
 }
 
-// parseQuotedToken parse a token of the form
-// table
-// "table"
+// parseQuotedToken parse a token of the form <STRING>, '<STRING>', "<STRING>", `<STRING>`
 func (p *parser) parseQuotedToken() (*Decl, error) {
 	quoted := false
 	quoteToken := DoubleQuoteToken
 
-	if p.is(DoubleQuoteToken) || p.is(BacktickToken) {
+	if p.is(SimpleQuoteToken) || p.is(DoubleQuoteToken) || p.is(BacktickToken) {
 		quoted = true
 		quoteToken = p.cur().Token
 		if err := p.next(); err != nil {
@@ -481,14 +481,16 @@ func (p *parser) parseQuotedToken() (*Decl, error) {
 		}
 	}
 
-	// shoud be a StringToken here
-	if !p.is(StringToken) {
+	// shoud be a StringToken or keyword token
+	if !p.is(StringToken) && !p.cur().IsAWord() {
 		return nil, p.syntaxError()
 	}
-	decl := NewDecl(p.cur())
+	decl := &Decl{
+		Token:  StringToken,
+		Lexeme: p.cur().Lexeme,
+	}
 
 	if quoted {
-
 		// Check there is a closing quote
 		if _, err := p.mustHaveNext(quoteToken); err != nil {
 			return nil, err
