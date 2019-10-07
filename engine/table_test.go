@@ -37,6 +37,32 @@ func TestInsertTable(t *testing.T) {
 	}
 }
 
+func createTable(e *Engine, t *testing.T) {
+	query := `CREATE TABLE user (
+      id INT PRIMARY KEY,
+	    last_name TEXT,
+	    first_name TEXT,
+	    email TEXT,
+	    birth_date DATE,
+	    country TEXT,
+	    town TEXT,
+	    zip_code TEXT,
+      created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      modified_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+	)`
+
+	i, err := parser.ParseInstruction(query)
+	if err != nil {
+		t.Fatalf("Cannot parse query %s : %s", query, err)
+	}
+
+	err = e.executeQuery(i[0], &TestEngineConn{})
+	if err != nil {
+		t.Fatalf("Cannot execute query: %s", err)
+	}
+
+}
+
 func TestCreateAndInsertTableWithBacktickedKeyword(t *testing.T) {
 	log.UseTestLogger(t)
 
@@ -70,30 +96,4 @@ func TestCreateAndInsertTableWithBacktickedKeyword(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Cannot execute query: %s", err)
 	}
-}
-
-func createTable(e *Engine, t *testing.T) {
-	query := `CREATE TABLE user (
-      id INT PRIMARY KEY,
-	    last_name TEXT,
-	    first_name TEXT,
-	    email TEXT,
-	    birth_date DATE,
-	    country TEXT,
-	    town TEXT,
-	    zip_code TEXT,
-      created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      modified_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-	)`
-
-	i, err := parser.ParseInstruction(query)
-	if err != nil {
-		t.Fatalf("Cannot parse query %s : %s", query, err)
-	}
-
-	err = e.executeQuery(i[0], &TestEngineConn{})
-	if err != nil {
-		t.Fatalf("Cannot execute query: %s", err)
-	}
-
 }

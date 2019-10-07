@@ -106,6 +106,21 @@ func TestParserCreateTableWithShadowedKeyword(t *testing.T) {
 	parse(query, 1, t)
 }
 
+func TestParserCreateTableWithBooleanField(t *testing.T) {
+	query := `CREATE TABLE account (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, is_enabled BOOLEAN NOT NULL)`
+	parse(query, 1, t)
+}
+
+func TestParserInsertTableWithBooleanFieldFalse(t *testing.T) {
+	query := `INSERT INTO account (id, is_enabled) VALUES (0, false)`
+	parse(query, 1, t)
+}
+
+func TestParserInsertTableWithBooleanFieldTrue(t *testing.T) {
+	query := `INSERT INTO account (id, is_enabled) VALUES (0, true)`
+	parse(query, 1, t)
+}
+
 func TestParserMultipleInstructions(t *testing.T) {
 	query := `CREATE TABLE account (id INT, email TEXT);CREATE TABLE user (id INT, email TEXT)`
 	parse(query, 2, t)

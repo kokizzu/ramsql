@@ -2,6 +2,7 @@ package engine_test
 
 import (
 	"database/sql"
+	"fmt"
 	"testing"
 
 	"github.com/mlhoyt/ramsql/engine/log"
@@ -123,6 +124,56 @@ func TestSelect(t *testing.T) {
 		t.Fatalf("sql.Close : Error : %s\n", err)
 	}
 
+}
+
+func TestCreateInsertSelectTableWithBooleanFields(t *testing.T) {
+	log.UseTestLogger(t)
+	db, err := sql.Open("ramsql", "TestCreateInsertSelectTableWithBooleanFields")
+	if err != nil {
+		t.Fatalf("sql.Open : Error : %s\n", err)
+	}
+	defer db.Close()
+
+	_, err = db.Exec("CREATE TABLE account (id INT PRIMARY KEY AUTO_INCREMENT, is_enabled BOOLEAN NOT NULL, is_active BOOLEAN NOT NULL)")
+	if err != nil {
+		t.Fatalf("Cannot create table account: %s", err)
+	}
+
+	_, err = db.Exec("INSERT INTO account (is_enabled, is_active) VALUES (true, false)")
+	if err != nil {
+		t.Fatalf("Cannot insert into table account: %s", err)
+	}
+
+	row := db.QueryRow("SELECT * FROM account WHERE id = 1")
+	if row == nil {
+		t.Fatalf("Cannot select from table account")
+	}
+	fmt.Printf("[DEBUG] function:TestCreateInsertSelectTableWithBooleanFields select-row:%v\n", row)
+
+	var id int
+	var isEnabled bool
+	var isActive bool
+	err = row.Scan(&id, &isEnabled, &isActive)
+	if err != nil {
+		t.Fatalf("row.Scan: %s", err)
+	}
+
+	if id != 1 {
+		t.Fatalf("Expected id = 1, got %d", id)
+	}
+
+	if isEnabled != true {
+		t.Fatalf("Expected isEnabled = true, got <%v>", isEnabled)
+	}
+
+	if isActive != false {
+		t.Fatalf("Expected isActive = false, got <%v>", isActive)
+	}
+
+	err = db.Close()
+	if err != nil {
+		t.Fatalf("sql.Close : Error : %s\n", err)
+	}
 }
 
 func TestSelectNotNullAttribute(t *testing.T) {
