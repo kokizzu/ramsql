@@ -422,8 +422,8 @@ func (p *parser) parseAttribute() (*Decl, error) {
 	quoteToken := DoubleQuoteToken
 
 	if p.is(DoubleQuoteToken) || p.is(BacktickToken) {
-		quoteToken = p.cur().Token
 		quoted = true
+		quoteToken = p.cur().Token
 		if err := p.next(); err != nil {
 			return nil, err
 		}
@@ -435,7 +435,7 @@ func (p *parser) parseAttribute() (*Decl, error) {
 	if !p.is(StringToken, StarToken) {
 		return nil, p.syntaxError()
 	}
-	decl := NewDecl(p.cur())
+	attrDecl := NewDecl(p.cur())
 
 	if quoted {
 		// Check there is a closing quote
@@ -444,28 +444,45 @@ func (p *parser) parseAttribute() (*Decl, error) {
 			return nil, err
 		}
 	}
-	// If no next token,and not quoted, then is was the atribute name
+	// If no next token,and not quoted, then it was the atribute name
 	if err := p.next(); err != nil {
-		return decl, nil
+		return attrDecl, nil
 	}
 
-	// Now, is it a point ?
+	// Optional: '.'
 	if p.is(PeriodToken) {
 		_, err := p.consumeToken(PeriodToken)
 		if err != nil {
 			return nil, err
 		}
 		// if so, next must be the attribute name or a star
-		attributeDecl, err := p.consumeToken(StringToken, StarToken)
+		tableDecl := attrDecl
+		attrDecl, err = p.consumeToken(StringToken, StarToken)
 		if err != nil {
 			return nil, err
 		}
-		attributeDecl.Add(decl)
-		return attributeDecl, nil
+
+		attrDecl.Add(tableDecl)
 	}
 
-	// Then the first string token was the naked attribute name
-	return decl, nil
+	// Optional: AS ...
+	if p.is(AsToken) {
+		asDecl, err := p.consumeToken(AsToken)
+		if err != nil {
+			return nil, err
+		}
+
+		// Required: <ATTRIBUTE-RENAME>
+		renameDecl, err := p.consumeToken(StringToken)
+		if err != nil {
+			return nil, err
+		}
+
+		attrDecl.Add(asDecl)
+		asDecl.Add(renameDecl)
+	}
+
+	return attrDecl, nil
 }
 
 // parseQuotedToken parse a token of the form <STRING>, '<STRING>', "<STRING>", `<STRING>`

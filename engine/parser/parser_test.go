@@ -293,6 +293,11 @@ func TestSelectJoin(t *testing.T) {
 	parse(query, 1, t)
 }
 
+func TestSelectWithAs(t *testing.T) {
+	query := `SELECT user.id AS user_id FROM user`
+	parse(query, 1, t)
+}
+
 func TestInsertMinimal(t *testing.T) {
 	query := `INSERT INTO account ('email', 'password', 'age') VALUES ('foo@bar.com', 'tititoto', '4')`
 	parse(query, 1, t)

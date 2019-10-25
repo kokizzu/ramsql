@@ -12,6 +12,7 @@ import (
 // Attribute (aka Field, Column) is a named column of a relation
 type Attribute struct {
 	name          string
+	selectAs      string
 	typeName      string
 	defaultValue  interface{}
 	onUpdateValue interface{}
@@ -28,6 +29,15 @@ func NewAttribute(name string, typeName string, autoIncrement bool) Attribute {
 		autoIncrement: autoIncrement,
 		isNullable:    true,
 	}
+}
+
+// Name is a convenience method to get the effective name (which may or may not be aliased)
+func (u Attribute) Name() string {
+	if u.selectAs != "" {
+		return u.selectAs
+	}
+
+	return u.name
 }
 
 // TranslateDecl traverses a Decl tree translating token sequences into Attribute settings

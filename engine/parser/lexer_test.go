@@ -20,12 +20,29 @@ func TestLexerSimple(t *testing.T) {
 }
 
 func TestParseDate(t *testing.T) {
-	const long = "2006-01-02 15:04:05.999999999 -0700 MST"
-	data := `2015-09-10 14:03:09.444695269 +0200 CEST`
+	data := `2015-09-10T14:03:09.444695269Z`
 
-	_, err := time.Parse(long, data)
+	_, err := time.Parse(time.RFC3339Nano, data)
 	if err != nil {
 		t.Fatalf("Cannot parse %s: %s", data, err)
+	}
+}
+
+func TestLexerDate(t *testing.T) {
+	query := `2015-09-10T14:03:09.444695269Z`
+
+	lexer := lexer{}
+	decls, err := lexer.lex([]byte(query))
+	if err != nil {
+		t.Fatalf("Cannot lex <%s> string", query)
+	}
+
+	if len(decls) != 1 {
+		t.Fatalf("Lexing failed, expected 1 tokens, got %d", len(decls))
+	}
+
+	if decls[0].Token != StringToken {
+		t.Fatalf("Lexing failed, expected a String (%d) tokens, got %d", DateToken, decls[0].Token)
 	}
 }
 

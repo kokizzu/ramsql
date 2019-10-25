@@ -305,7 +305,7 @@ func TestCompareDateGT(t *testing.T) {
 
 	query := "SELECT dat FROM comp WHERE dat > '2018-03-03'"
 
-	rows, err := db.Query(query, )
+	rows, err := db.Query(query)
 	if err != nil {
 		t.Fatalf("sql.Query: %s", err)
 	}
@@ -362,7 +362,7 @@ func TestCompareDateLT(t *testing.T) {
 
 	query := "SELECT dat FROM comp WHERE dat < '2019-03-03'"
 
-	rows, err := db.Query(query, )
+	rows, err := db.Query(query)
 	if err != nil {
 		t.Fatalf("sql.Query: %s", err)
 	}
@@ -393,12 +393,27 @@ func TestCompareDateLT(t *testing.T) {
 func TestDate(t *testing.T) {
 	log.UseTestLogger(t)
 
-	query := `
+	createTableRefreshTokenSQL := `create table if not exists "refresh_token" (
+    "uuid" text not null primary key,
+  	"hash_token" text,
+  	"user_id" bigint,
+  	"expires" timestamp with time zone,
+  	"tag" text
+  )`
+
+	createTableTokenSQL := `CREATE TABLE token (
+    uuid TEXT PRIMARY KEY,
+    hash_token TEXT,
+    user_id BIGINT,
+    expires TIMESTAMP WITH TIME ZONE
+  )`
+
+	insertTokenSQL := `
 	insert into "token" ("uuid","hash_token","user_id","expires")
 	values ('a0db2f53-f668-472a-87e5-840f185128c2',
           'dj9cNdtipDBCBztYX9M0Qia0I7Ity9wlpfCAH+Xl33e9xAPBWxT+dsrt6/SAX32Z9Bt0sps1nIWF2/e7sh4tqg==',
           1,
-          2015-09-10 14:03:09.444695269 +0200 CEST);`
+          2015-09-10T14:03:09.444695269Z);`
 
 	db, err := sql.Open("ramsql", "TestDate")
 	if err != nil {
@@ -406,22 +421,17 @@ func TestDate(t *testing.T) {
 	}
 	defer db.Close()
 
-	create := `create table if not exists "refresh_token" ("uuid" text not null primary key,
-	"hash_token" text,
-	"user_id" bigint,
-	"expires" timestamp with time zone,
-	"tag" text) ;`
-	_, err = db.Exec(create)
+	_, err = db.Exec(createTableRefreshTokenSQL)
 	if err != nil {
 		t.Fatalf("Cannot create table: %s", err)
 	}
 
-	_, err = db.Exec(`CREATE TABLE token (uuid TEXT PRIMARY KEY, hash_token TEXT, user_id BIGINT, expires TIMESTAMP WITH TIME ZONE)`)
+	_, err = db.Exec(createTableTokenSQL)
 	if err != nil {
 		t.Fatalf("Cannot create table: %s", err)
 	}
 
-	_, err = db.Exec(query)
+	_, err = db.Exec(insertTokenSQL)
 	if err != nil {
 		t.Fatalf("Cannot insert data: %s", err)
 	}
@@ -432,7 +442,7 @@ func TestDate(t *testing.T) {
 		t.Fatalf("Cannot select date: %s", err)
 	}
 
-	if fmt.Sprintf("%v", date) != "2015-09-10 14:03:09.444695269 +0200 CEST" {
+	if fmt.Sprintf("%v", date) != "2015-09-10 14:03:09.444695269 +0000 UTC" {
 		t.Fatalf("Expected specific date, got %v", date)
 	}
 }

@@ -56,6 +56,59 @@ func TestJoinOrderBy(t *testing.T) {
 	}
 }
 
+func TestJoinAs(t *testing.T) {
+	log.UseTestLogger(t)
+
+	db, err := sql.Open("ramsql", "TestJoinAs")
+	if err != nil {
+		t.Fatalf("sql.Open: %s", err)
+	}
+	defer db.Close()
+
+	init := []string{
+		`CREATE TABLE user (id BIGINT PRIMARY KEY AUTO_INCREMENT, name TEXT)`,
+		`CREATE TABLE address (id BIGINT PRIMARY KEY AUTO_INCREMENT, user_id INT, value TEXT)`,
+		`INSERT INTO user (name) VALUES ('foo')`,
+		`INSERT INTO user (name) VALUES ('bar')`,
+		`INSERT INTO address (user_id, value) VALUES (1, '123 First St')`,
+		`INSERT INTO address (user_id, value) VALUES (2, '456 Second St')`,
+		`INSERT INTO address (user_id, value) VALUES (2, 'Apt Alpha')`,
+	}
+	for _, q := range init {
+		_, err := db.Exec(q)
+		if err != nil {
+			t.Fatalf("Cannot initialize test: %s", err)
+		}
+	}
+
+	query := `SELECT user.id AS user_id, user.name AS user_name, address.value AS user_address
+			FROM user 
+			JOIN address ON user.id = address.user_id
+			WHERE user.id = ?`
+	rows, err := db.Query(query, 2)
+	if err != nil {
+		t.Fatalf("Cannot select with joined as: %s", err)
+	}
+	defer rows.Close()
+
+	n := 0
+	for rows.Next() {
+		var user_id int64
+		var user_name string
+		var user_address string
+
+		err := rows.Scan(&user_id, &user_name, &user_address)
+		if err != nil {
+			t.Fatalf("Failed to scan row %d: %s", n, err)
+		}
+
+		n++
+	}
+	if n != 2 {
+		t.Fatalf("Expected 2 rows, got %d", n)
+	}
+}
+
 func TestMultipleJoin(t *testing.T) {
 	log.UseTestLogger(t)
 

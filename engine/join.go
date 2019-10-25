@@ -111,11 +111,11 @@ func generateVirtualRows(e *Engine, attr []Attribute, conn protocol.EngineConn, 
 		relations[j.On()] = r
 	}
 
-	// Write header
+	// Generate fully-qualified attribute names and aliases
 	var header []string
 	var alias []string
 	for _, a := range attr {
-		alias = append(alias, a.name)
+		alias = append(alias, a.Name())
 		if strings.Contains(a.name, ".") == false {
 			a.name = t1Name + "." + a.name
 		}

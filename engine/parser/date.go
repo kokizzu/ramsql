@@ -5,8 +5,8 @@ import (
 	"time"
 )
 
-// DateLongFormat is same as time.Time#String(), except this does not include monotonic time section
-const DateLongFormat = "2006-01-02 15:04:05.999999999 -0700 MST"
+// DateLongFormat is same as time.RFC3339Nano
+const DateLongFormat = time.RFC3339Nano
 
 // DateShortFormat is a short date format with human-readable month element
 const DateShortFormat = "2006-Jan-02"
@@ -22,6 +22,11 @@ func ParseDate(data string) (*time.Time, error) {
 	}
 
 	t, err = time.Parse(time.RFC3339, data)
+	if err == nil {
+		return &t, nil
+	}
+
+	t, err = time.Parse("2006-01-02 15:04:05.999999 -0700 MST", data)
 	if err == nil {
 		return &t, nil
 	}

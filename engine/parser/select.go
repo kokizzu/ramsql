@@ -75,15 +75,49 @@ func (p *parser) parseSelect() (*Instruction, error) {
 		}
 	}
 
+	// Optional: INNER
+	// var innerJoinDecl *Decl
+	if p.is(InnerToken) {
+		_, err := p.consumeToken(InnerToken)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Optional: LEFT, RIGHT
+	// var dirOuterJoinDecl *Decl
+	if p.is(LeftToken) {
+		_, err := p.consumeToken(LeftToken)
+		if err != nil {
+			return nil, err
+		}
+	} else if p.is(RightToken) {
+		_, err := p.consumeToken(RightToken)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Optional: OUTER
+	// var outerJoinDecl *Decl
+	if p.is(OuterToken) {
+		_, err := p.consumeToken(OuterToken)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	// JOIN OR ...?
 	for p.is(JoinToken) {
 		joinDecl, err := p.parseJoin()
 		if err != nil {
 			return nil, err
 		}
+		// FIXME: Need to annotate joinDecl with innerJoinDecl or outerJoinDecl (and dirOuterJoinDecl)
 		selectDecl.Add(joinDecl)
 	}
 
+	// Optional: WHERE ..., ORDER [BY] ..., LIMIT ..., OFFSET ..., FOR ...
 	hazWhereClause := false
 	for {
 		switch p.cur().Token {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/mlhoyt/ramsql/engine/log"
 	"github.com/mlhoyt/ramsql/engine/parser"
@@ -203,6 +204,7 @@ func (f *defaultSelectFunction) Init(e *Engine, conn protocol.EngineConn, attr [
 	f.attributes = attr
 	f.alias = alias
 
+	log.Debug("function:defaultSelectFunction.Init: rowHeader=%v", f.alias)
 	return f.conn.WriteRowHeader(f.alias)
 }
 
@@ -214,13 +216,21 @@ func (f *defaultSelectFunction) FeedVirtualRow(vrow virtualRow) error {
 		if !ok {
 			return fmt.Errorf("could not select attribute %s", attr)
 		}
-		row = append(row, fmt.Sprintf("%v", val.v))
+
+		switch v := val.v.(type) {
+		case time.Time:
+			row = append(row, v.Format(parser.DateLongFormat))
+		default:
+			row = append(row, fmt.Sprintf("%v", v))
+		}
 	}
 
+	log.Debug("function:defaultSelectFunction.FeedVirtualRow: row=%v", row)
 	return f.conn.WriteRow(row)
 }
 
 func (f *defaultSelectFunction) Done() error {
+	log.Debug("function:defaultSelectFunction.Done: rowEnd=")
 	return f.conn.WriteRowEnd()
 }
 
@@ -547,20 +557,56 @@ func getSelectedAttribute(e *Engine, attr *parser.Decl, tables []*Table) ([]Attr
 		if err != nil && attr.Decl[0].Lexeme != "*" {
 			return nil, err
 		}
-		attributes = append(attributes, NewAttribute("COUNT", "int", false))
+		attribute := NewAttribute("COUNT", "int", false)
+
+		if len(attr.Decl) == 2 {
+			if attr.Decl[1].Token != parser.AsToken {
+				return nil, fmt.Errorf("SELECT attribute definition encountered unexpected token (%s) while expecting AS", attr.Decl[1].Lexeme)
+			}
+
+			if len(attr.Decl[1].Decl) != 1 || attr.Decl[1].Decl[0].Token != parser.StringToken {
+				return nil, fmt.Errorf("SELECT attribute definition encountered unexpected token (%s) while expecting AS <STRING>", attr.Decl[1].Decl[0].Lexeme)
+			}
+			attribute.selectAs = attr.Decl[1].Decl[0].Lexeme
+		}
+
+		attributes = append(attributes, attribute)
 	case parser.StringToken:
-		attribute := attr.Lexeme
-		if len(attr.Decl) > 0 {
-			if err := attributeExistsInTable(e, attr.Lexeme, attr.Decl[0].Lexeme); err != nil {
+		attributeName := attr.Lexeme
+		attributeRename := ""
+		if len(attr.Decl) == 2 { // <TABLE-NAME> 'AS' ...
+			// 0: <TABLE-NAME>
+			tableName := attr.Decl[0].Lexeme
+			if err := attributeExistsInTable(e, attributeName, tableName); err != nil {
 				return nil, err
 			}
-			attribute = attr.Decl[0].Lexeme + "." + attribute
+			attributeName = tableName + "." + attributeName
+			// 1: 'AS' ...
+			if attr.Decl[1].Token != parser.AsToken {
+				return nil, fmt.Errorf("SELECT attribute definition encountered unexpected token (%s) while expecting AS", attr.Decl[1].Lexeme)
+			}
+			attributeRename = attr.Decl[1].Decl[0].Lexeme
+		} else if len(attr.Decl) == 1 { // <TABLE-NAME> || 'AS' ...
+			if attr.Decl[0].Token != parser.AsToken {
+				// <TABLE-NAME>
+				tableName := attr.Decl[0].Lexeme
+				if err := attributeExistsInTable(e, attributeName, tableName); err != nil {
+					return nil, err
+				}
+				attributeName = tableName + "." + attributeName
+			} else {
+				// 'AS' ...
+				attributeRename = attr.Decl[0].Decl[0].Lexeme
+			}
 		}
-		newAttr := NewAttribute(attribute, "text", false)
-		if err := attributesExistInTables(e, []Attribute{newAttr}, t); err != nil {
+
+		attribute := NewAttribute(attributeName, "text", false)
+		attribute.selectAs = attributeRename
+		if err := attributesExistInTables(e, []Attribute{attribute}, t); err != nil {
 			return nil, err
 		}
-		attributes = append(attributes, newAttr)
+
+		attributes = append(attributes, attribute)
 	}
 
 	return attributes, nil

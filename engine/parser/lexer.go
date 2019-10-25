@@ -18,6 +18,7 @@ type lexer struct {
 const (
 	ActionToken         = iota // Second-order
 	AndToken                   // Second-order
+	AsToken                    // Second-order
 	AscToken                   // Second-order
 	AutoincrementToken         // Second-order
 	BacktickToken              // Punctuation
@@ -53,12 +54,14 @@ const (
 	IfToken                    // Second-order
 	InToken                    // Second-order
 	IndexToken                 // Second-order
+	InnerToken                 // Second-order
 	InsertToken                // First-order
 	IntToken                   // Type
 	IntoToken                  // Second-order
 	IsToken                    // Second-order
 	JoinToken                  // Second-order
 	KeyToken                   // Type
+	LeftToken                  // Second-order
 	LeftDipleToken             // Punctuation
 	LessOrEqualToken           // Punctuation
 	LimitToken                 // Second-order
@@ -73,12 +76,14 @@ const (
 	OnToken                    // Second-order
 	OrToken                    // Second-order
 	OrderToken                 // Second-order
+	OuterToken                 // Second-order
 	PartialToken               // Quote
 	PeriodToken                // Quote
 	PrimaryToken               // Type
 	ReferencesToken            // Second-order
 	ReturningToken             // Second-order
 	RestrictToken              // Second-order
+	RightToken                 // Second-order
 	RightDipleToken            // Punctuation
 	SelectToken                // First-order
 	SemicolonToken             // Punctuation
@@ -118,6 +123,7 @@ type Matcher func() bool
 //go:generate ./lexer-generate-matcher.sh --lexeme "`" --name Backtick
 //go:generate ./lexer-generate-matcher.sh --lexeme "action"
 //go:generate ./lexer-generate-matcher.sh --lexeme "and"
+//go:generate ./lexer-generate-matcher.sh --lexeme "as"
 //go:generate ./lexer-generate-matcher.sh --lexeme "asc"
 //go:generate ./lexer-generate-matcher.sh --lexeme "autoincrement" --lexeme "auto_increment"
 //go:generate ./lexer-generate-matcher.sh --lexeme "btree"
@@ -144,11 +150,13 @@ type Matcher func() bool
 //go:generate ./lexer-generate-matcher.sh --lexeme "if"
 //go:generate ./lexer-generate-matcher.sh --lexeme "in"
 //go:generate ./lexer-generate-matcher.sh --lexeme "index"
+//go:generate ./lexer-generate-matcher.sh --lexeme "inner"
 //go:generate ./lexer-generate-matcher.sh --lexeme "insert"
 //go:generate ./lexer-generate-matcher.sh --lexeme "into"
 //go:generate ./lexer-generate-matcher.sh --lexeme "is"
 //go:generate ./lexer-generate-matcher.sh --lexeme "join"
 //go:generate ./lexer-generate-matcher.sh --lexeme "key"
+//go:generate ./lexer-generate-matcher.sh --lexeme "left"
 //go:generate ./lexer-generate-matcher.sh --lexeme "limit"
 //go:generate ./lexer-generate-matcher.sh --lexeme "localtimestamp" --lexeme "current_timestamp" --name LocalTimestamp
 //go:generate ./lexer-generate-matcher.sh --lexeme "match"
@@ -160,11 +168,13 @@ type Matcher func() bool
 //go:generate ./lexer-generate-matcher.sh --lexeme "on"
 //go:generate ./lexer-generate-matcher.sh --lexeme "or"
 //go:generate ./lexer-generate-matcher.sh --lexeme "order"
+//go:generate ./lexer-generate-matcher.sh --lexeme "outer"
 //go:generate ./lexer-generate-matcher.sh --lexeme "partial"
 //go:generate ./lexer-generate-matcher.sh --lexeme "primary"
 //go:generate ./lexer-generate-matcher.sh --lexeme "references"
 //go:generate ./lexer-generate-matcher.sh --lexeme "restrict"
 //go:generate ./lexer-generate-matcher.sh --lexeme "returning"
+//go:generate ./lexer-generate-matcher.sh --lexeme "right"
 //go:generate ./lexer-generate-matcher.sh --lexeme "select"
 //go:generate ./lexer-generate-matcher.sh --lexeme "set"
 //go:generate ./lexer-generate-matcher.sh --lexeme "simple"
@@ -216,6 +226,7 @@ func (l *lexer) lex(instruction []byte) ([]Token, error) {
 	matchers = append(matchers, l.MatchActionToken)
 	matchers = append(matchers, l.MatchAndToken)
 	matchers = append(matchers, l.MatchAscToken)
+	matchers = append(matchers, l.MatchAsToken)
 	matchers = append(matchers, l.MatchAutoincrementToken)
 	matchers = append(matchers, l.MatchBtreeToken)
 	matchers = append(matchers, l.MatchByToken)
@@ -236,11 +247,13 @@ func (l *lexer) lex(instruction []byte) ([]Token, error) {
 	matchers = append(matchers, l.MatchHashToken)
 	matchers = append(matchers, l.MatchIfToken)
 	matchers = append(matchers, l.MatchIndexToken)
+	matchers = append(matchers, l.MatchInnerToken)
 	matchers = append(matchers, l.MatchIntoToken)
 	matchers = append(matchers, l.MatchInToken)
 	matchers = append(matchers, l.MatchIsToken)
 	matchers = append(matchers, l.MatchJoinToken)
 	matchers = append(matchers, l.MatchKeyToken)
+	matchers = append(matchers, l.MatchLeftToken)
 	matchers = append(matchers, l.MatchLimitToken)
 	matchers = append(matchers, l.MatchLocalTimestampToken)
 	matchers = append(matchers, l.MatchMatchToken)
@@ -252,11 +265,13 @@ func (l *lexer) lex(instruction []byte) ([]Token, error) {
 	matchers = append(matchers, l.MatchOnToken)
 	matchers = append(matchers, l.MatchOrderToken)
 	matchers = append(matchers, l.MatchOrToken)
+	matchers = append(matchers, l.MatchOuterToken)
 	matchers = append(matchers, l.MatchPartialToken)
 	matchers = append(matchers, l.MatchPrimaryToken)
 	matchers = append(matchers, l.MatchReferencesToken)
 	matchers = append(matchers, l.MatchRestrictToken)
 	matchers = append(matchers, l.MatchReturningToken)
+	matchers = append(matchers, l.MatchRightToken)
 	matchers = append(matchers, l.MatchSetToken)
 	matchers = append(matchers, l.MatchSimpleToken)
 	matchers = append(matchers, l.MatchTableToken)
@@ -358,7 +373,7 @@ func (l *lexer) MatchNumberToken() bool {
 	return false
 }
 
-// 2015-09-10 14:03:09.444695269 +0200 CEST);
+// MatchDateToken prefers time.RFC3339Nano but will match a few others as well
 func (l *lexer) MatchDateToken() bool {
 
 	i := l.pos
