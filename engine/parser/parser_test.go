@@ -293,6 +293,13 @@ func TestSelectJoin(t *testing.T) {
 	parse(query, 1, t)
 }
 
+func TestSelectInnerJoin(t *testing.T) {
+	query := `SELECT address.* FROM address
+	INNER JOIN user_addresses ON address.id=user_addresses.address_id
+	WHERE user_addresses.user_id=1`
+	parse(query, 1, t)
+}
+
 func TestSelectWithAs(t *testing.T) {
 	query := `SELECT user.id AS user_id FROM user`
 	parse(query, 1, t)
@@ -355,6 +362,11 @@ func TestUpdateMultipleAttributes(t *testing.T) {
 
 func TestParseMultipleJoin(t *testing.T) {
 	query := `SELECT group.id, user.username FROM group JOIN group_user ON group_user.group_id = group.id JOIN user ON user.id = group_user.user_id WHERE group.name = 1`
+	parse(query, 1, t)
+}
+
+func TestParseMultipleInnerJoin(t *testing.T) {
+	query := `SELECT group.id, user.username FROM group INNER JOIN group_user ON group_user.group_id = group.id INNER JOIN user ON user.id = group_user.user_id WHERE group.name = 1`
 	parse(query, 1, t)
 }
 

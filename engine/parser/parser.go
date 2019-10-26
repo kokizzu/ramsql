@@ -700,7 +700,7 @@ func (p *parser) parseJoin() (*Decl, error) {
 	}
 	onDecl.Add(equalAttr)
 
-	//ATTRIBUTE
+	// ATTRIBUTE
 	rightAttributeDecl, err := p.parseAttribute()
 	if err != nil {
 		return nil, err
