@@ -3,7 +3,7 @@ package engine
 import (
 	"fmt"
 	"github.com/mlhoyt/ramsql/engine/log"
-	"github.com/mlhoyt/ramsql/engine/parser"
+	"github.com/mlhoyt/ramsql/engine/parser/lexer"
 	"strconv"
 	"time"
 )
@@ -14,15 +14,15 @@ type Operator func(leftValue Value, rightValue Value) bool
 // NewOperator initializes the operator matching the Token number
 func NewOperator(token int, lexeme string) (Operator, error) {
 	switch token {
-	case parser.EqualityToken:
+	case lexer.EqualityToken:
 		return equalityOperator, nil
-	case parser.LeftDipleToken:
+	case lexer.LeftDipleToken:
 		return lessThanOperator, nil
-	case parser.RightDipleToken:
+	case lexer.RightDipleToken:
 		return greaterThanOperator, nil
-	case parser.LessOrEqualToken:
+	case lexer.LessOrEqualToken:
 		return lessOrEqualOperator, nil
-	case parser.GreaterOrEqualToken:
+	case lexer.GreaterOrEqualToken:
 		return greaterOrEqualOperator, nil
 	}
 
@@ -36,7 +36,7 @@ func convToDate(t interface{}) (time.Time, error) {
 		log.Debug("convToDate> unexpected type %T\n", t)
 		return time.Time{}, fmt.Errorf("unexpected internal type %T", t)
 	case string:
-		d, err :=parser.ParseDate(string(t))
+		d, err := lexer.ParseDate(string(t))
 		if err != nil {
 			return time.Time{}, fmt.Errorf("cannot parse date %v", t)
 		}

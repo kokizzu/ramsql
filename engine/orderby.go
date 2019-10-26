@@ -8,6 +8,7 @@ import (
 
 	"github.com/mlhoyt/ramsql/engine/log"
 	"github.com/mlhoyt/ramsql/engine/parser"
+	"github.com/mlhoyt/ramsql/engine/parser/lexer"
 	"github.com/mlhoyt/ramsql/engine/protocol"
 )
 
@@ -34,7 +35,7 @@ func orderbyExecutor(attr *parser.Decl, tables []*Table) (selectFunctor, error) 
 	}
 	// if second subdecl is present, it's either asc or desc
 	// default is asc anyway
-	if len(attr.Decl) == 2 && attr.Decl[1].Token == parser.AscToken {
+	if len(attr.Decl) == 2 && attr.Decl[1].Token == lexer.AscToken {
 		f.asc = true
 	}
 

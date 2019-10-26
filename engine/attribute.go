@@ -7,6 +7,7 @@ import (
 
 	"github.com/mlhoyt/ramsql/engine/log"
 	"github.com/mlhoyt/ramsql/engine/parser"
+	"github.com/mlhoyt/ramsql/engine/parser/lexer"
 )
 
 // Attribute (aka Field, Column) is a named column of a relation
@@ -47,7 +48,7 @@ func parseAttribute(decl *parser.Decl) (Attribute, error) {
 	attr := NewAttribute("", "", false)
 
 	// Attribute name
-	if decl.Token != parser.StringToken {
+	if decl.Token != lexer.StringToken {
 		return attr, fmt.Errorf("engine: expected attribute name, got %v", decl.Token)
 	}
 	attr.name = decl.Lexeme
@@ -56,7 +57,7 @@ func parseAttribute(decl *parser.Decl) (Attribute, error) {
 	if len(decl.Decl) < 1 {
 		return attr, fmt.Errorf("Attribute %s has no type", decl.Lexeme)
 	}
-	if decl.Decl[0].Token != parser.StringToken {
+	if decl.Decl[0].Token != lexer.StringToken {
 		return attr, fmt.Errorf("engine: expected attribute type, got %v:%v", decl.Decl[0].Token, decl.Decl[0].Lexeme)
 	}
 	attr.typeName = decl.Decl[0].Lexeme
@@ -66,39 +67,39 @@ func parseAttribute(decl *parser.Decl) (Attribute, error) {
 	for i := range typeDecl {
 		log.Debug("Got %v for %s %s", typeDecl[i], attr.name, attr.typeName)
 		switch typeDecl[i].Token {
-		case parser.AutoincrementToken: // AUTOINCREMENT
+		case lexer.AutoincrementToken: // AUTOINCREMENT
 			attr.autoIncrement = true
-		case parser.UniqueToken: // UNIQUE
+		case lexer.UniqueToken: // UNIQUE
 			attr.unique = true
-		case parser.NotToken: // NOT NULL
+		case lexer.NotToken: // NOT NULL
 			if len(typeDecl[i].Decl) != 1 {
 				return attr, fmt.Errorf("Attribute %s has incomplete NOT NULL constraint", attr.name)
 			}
 			switch typeDecl[i].Decl[0].Token {
-			case parser.NullToken:
+			case lexer.NullToken:
 				attr.isNullable = false
 			}
-		case parser.NullToken: // NULL
+		case lexer.NullToken: // NULL
 			if len(typeDecl[i].Decl) != 0 {
 				return attr, fmt.Errorf("Attribute %s has NULL constraint with extra arguments", attr.name)
 			}
 			attr.isNullable = true
-		case parser.DefaultToken: // DEFAULT <VALUE>
+		case lexer.DefaultToken: // DEFAULT <VALUE>
 			log.Debug("we get a default value for %s: %s!\n", attr.name, typeDecl[i].Decl[0].Lexeme)
 			switch typeDecl[i].Decl[0].Token {
-			case parser.LocalTimestampToken, parser.NowToken:
+			case lexer.LocalTimestampToken, lexer.NowToken:
 				log.Debug("Setting default value to NOW() func !\n")
-				attr.defaultValue = func() interface{} { return time.Now().Format(parser.DateLongFormat) }
+				attr.defaultValue = func() interface{} { return time.Now().Format(lexer.DateLongFormat) }
 			default:
 				log.Debug("Setting default value to '%v'\n", typeDecl[i].Decl[0].Lexeme)
 				attr.defaultValue = typeDecl[i].Decl[0].Lexeme
 			}
-		case parser.OnToken: // ON UPDATE <VALUE>
+		case lexer.OnToken: // ON UPDATE <VALUE>
 			log.Debug("we get a on update value for %s: %s!\n", attr.name, typeDecl[i].Decl[0].Decl[0].Lexeme)
 			switch typeDecl[i].Decl[0].Decl[0].Token {
-			case parser.LocalTimestampToken, parser.NowToken:
+			case lexer.LocalTimestampToken, lexer.NowToken:
 				log.Debug("Setting on update value to NOW() func !\n")
-				attr.onUpdateValue = func() interface{} { return time.Now().Format(parser.DateLongFormat) }
+				attr.onUpdateValue = func() interface{} { return time.Now().Format(lexer.DateLongFormat) }
 			default:
 				log.Debug("Setting on update value to '%v'\n", typeDecl[i].Decl[0].Decl[0].Lexeme)
 				attr.onUpdateValue = typeDecl[i].Decl[0].Decl[0].Lexeme

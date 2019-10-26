@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"github.com/mlhoyt/ramsql/engine/parser/lexer"
 )
 
 func (p *parser) parseSelect() (*Instruction, error) {
@@ -13,15 +14,15 @@ func (p *parser) parseSelect() (*Instruction, error) {
 	i.Decls = append(i.Decls, selectDecl)
 
 	// After select token, should be either
-	// a StarToken
-	// a list of table names + (StarToken Or Attribute)
+	// a lexer.StarToken
+	// a list of table names + (lexer.StarToken Or Attribute)
 	// a builtin func (COUNT, MAX, ...)
 	if err = p.next(); err != nil {
 		return nil, fmt.Errorf("SELECT token must be followed by attributes to select")
 	}
 
 	for {
-		if p.is(CountToken) {
+		if p.is(lexer.CountToken) {
 			attrDecl, err := p.parseBuiltinFunc()
 			if err != nil {
 				return nil, err
@@ -36,7 +37,7 @@ func (p *parser) parseSelect() (*Instruction, error) {
 		}
 
 		// If comma, loop again.
-		if p.is(CommaToken) {
+		if p.is(lexer.CommaToken) {
 			if err := p.next(); err != nil {
 				return nil, err
 			}
@@ -46,7 +47,7 @@ func (p *parser) parseSelect() (*Instruction, error) {
 	}
 
 	// Must be from now
-	if p.cur().Token != FromToken {
+	if p.cur().Token != lexer.FromToken {
 		return nil, fmt.Errorf("Syntax error near %v", p.cur())
 	}
 	fromDecl := NewDecl(p.cur())
@@ -70,15 +71,15 @@ func (p *parser) parseSelect() (*Instruction, error) {
 			return i, nil
 		}
 		// if not comma, break
-		if p.cur().Token != CommaToken {
+		if p.cur().Token != lexer.CommaToken {
 			break // No more table
 		}
 	}
 
 	// Optional: INNER
 	// var innerJoinDecl *Decl
-	if p.is(InnerToken) {
-		_, err := p.consumeToken(InnerToken)
+	if p.is(lexer.InnerToken) {
+		_, err := p.consumeToken(lexer.InnerToken)
 		if err != nil {
 			return nil, err
 		}
@@ -86,13 +87,13 @@ func (p *parser) parseSelect() (*Instruction, error) {
 
 	// Optional: LEFT, RIGHT
 	// var dirOuterJoinDecl *Decl
-	if p.is(LeftToken) {
-		_, err := p.consumeToken(LeftToken)
+	if p.is(lexer.LeftToken) {
+		_, err := p.consumeToken(lexer.LeftToken)
 		if err != nil {
 			return nil, err
 		}
-	} else if p.is(RightToken) {
-		_, err := p.consumeToken(RightToken)
+	} else if p.is(lexer.RightToken) {
+		_, err := p.consumeToken(lexer.RightToken)
 		if err != nil {
 			return nil, err
 		}
@@ -100,15 +101,15 @@ func (p *parser) parseSelect() (*Instruction, error) {
 
 	// Optional: OUTER
 	// var outerJoinDecl *Decl
-	if p.is(OuterToken) {
-		_, err := p.consumeToken(OuterToken)
+	if p.is(lexer.OuterToken) {
+		_, err := p.consumeToken(lexer.OuterToken)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	// JOIN OR ...?
-	for p.is(JoinToken) {
+	for p.is(lexer.JoinToken) {
 		joinDecl, err := p.parseJoin()
 		if err != nil {
 			return nil, err
@@ -121,13 +122,13 @@ func (p *parser) parseSelect() (*Instruction, error) {
 	hazWhereClause := false
 	for {
 		switch p.cur().Token {
-		case WhereToken:
+		case lexer.WhereToken:
 			err := p.parseWhere(selectDecl)
 			if err != nil {
 				return nil, err
 			}
 			hazWhereClause = true
-		case OrderToken:
+		case lexer.OrderToken:
 			if hazWhereClause == false {
 				// WHERE clause is implicit
 				addImplicitWhereAll(selectDecl)
@@ -136,29 +137,29 @@ func (p *parser) parseSelect() (*Instruction, error) {
 			if err != nil {
 				return nil, err
 			}
-		case LimitToken:
-			limitDecl, err := p.consumeToken(LimitToken)
+		case lexer.LimitToken:
+			limitDecl, err := p.consumeToken(lexer.LimitToken)
 			if err != nil {
 				return nil, err
 			}
 			selectDecl.Add(limitDecl)
-			numDecl, err := p.consumeToken(NumberToken)
+			numDecl, err := p.consumeToken(lexer.NumberToken)
 			if err != nil {
 				return nil, err
 			}
 			limitDecl.Add(numDecl)
-		case OffsetToken:
-			offsetDecl, err := p.consumeToken(OffsetToken)
+		case lexer.OffsetToken:
+			offsetDecl, err := p.consumeToken(lexer.OffsetToken)
 			if err != nil {
 				return nil, err
 			}
 			selectDecl.Add(offsetDecl)
-			offsetValue, err := p.consumeToken(NumberToken)
+			offsetValue, err := p.consumeToken(lexer.NumberToken)
 			if err != nil {
 				return nil, err
 			}
 			offsetDecl.Add(offsetValue)
-		case ForToken:
+		case lexer.ForToken:
 			err := p.parseForUpdate(selectDecl)
 			if err != nil {
 				return nil, err
@@ -172,11 +173,11 @@ func (p *parser) parseSelect() (*Instruction, error) {
 func addImplicitWhereAll(decl *Decl) {
 
 	whereDecl := &Decl{
-		Token:  WhereToken,
+		Token:  lexer.WhereToken,
 		Lexeme: "where",
 	}
 	whereDecl.Add(&Decl{
-		Token:  NumberToken,
+		Token:  lexer.NumberToken,
 		Lexeme: "1",
 	})
 
@@ -185,16 +186,16 @@ func addImplicitWhereAll(decl *Decl) {
 
 func (p *parser) parseForUpdate(decl *Decl) error {
 	// Optionnal
-	if !p.is(ForToken) {
+	if !p.is(lexer.ForToken) {
 		return nil
 	}
 
-	d, err := p.consumeToken(ForToken)
+	d, err := p.consumeToken(lexer.ForToken)
 	if err != nil {
 		return err
 	}
 
-	u, err := p.consumeToken(UpdateToken)
+	u, err := p.consumeToken(lexer.UpdateToken)
 	if err != nil {
 		return err
 	}

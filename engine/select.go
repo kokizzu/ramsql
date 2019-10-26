@@ -9,6 +9,7 @@ import (
 
 	"github.com/mlhoyt/ramsql/engine/log"
 	"github.com/mlhoyt/ramsql/engine/parser"
+	"github.com/mlhoyt/ramsql/engine/parser/lexer"
 	"github.com/mlhoyt/ramsql/engine/protocol"
 )
 
@@ -90,35 +91,35 @@ func selectExecutor(e *Engine, selectDecl *parser.Decl, conn protocol.EngineConn
 	selectDecl.Stringy(0)
 	for i := range selectDecl.Decl {
 		switch selectDecl.Decl[i].Token {
-		case parser.FromToken:
+		case lexer.FromToken:
 			// get selected tables
 			tables = fromExecutor(selectDecl.Decl[i])
-		case parser.WhereToken:
+		case lexer.WhereToken:
 			// get WHERE declaration
 			pred, err := whereExecutor2(e, selectDecl.Decl[i].Decl, tables[0].name)
 			if err != nil {
 				return err
 			}
 			predicates = []PredicateLinker{pred}
-		case parser.JoinToken:
+		case lexer.JoinToken:
 			j, err := joinExecutor(selectDecl.Decl[i])
 			if err != nil {
 				return err
 			}
 			joiners = append(joiners, j)
-		case parser.OrderToken:
+		case lexer.OrderToken:
 			orderFunctor, err := orderbyExecutor(selectDecl.Decl[i], tables)
 			if err != nil {
 				return err
 			}
 			functors = append(functors, orderFunctor)
-		case parser.LimitToken:
+		case lexer.LimitToken:
 			limit, err := strconv.Atoi(selectDecl.Decl[i].Decl[0].Lexeme)
 			if err != nil {
 				return fmt.Errorf("wrong limit value: %s", err)
 			}
 			conn = limitedConn(conn, limit)
-		case parser.OffsetToken:
+		case lexer.OffsetToken:
 			offset, err := strconv.Atoi(selectDecl.Decl[i].Decl[0].Lexeme)
 			if err != nil {
 				return fmt.Errorf("wrong offset value: %s", err)
@@ -128,9 +129,9 @@ func selectExecutor(e *Engine, selectDecl *parser.Decl, conn protocol.EngineConn
 	}
 
 	for i := range selectDecl.Decl {
-		if selectDecl.Decl[i].Token != parser.StringToken &&
-			selectDecl.Decl[i].Token != parser.StarToken &&
-			selectDecl.Decl[i].Token != parser.CountToken {
+		if selectDecl.Decl[i].Token != lexer.StringToken &&
+			selectDecl.Decl[i].Token != lexer.StarToken &&
+			selectDecl.Decl[i].Token != lexer.CountToken {
 			continue
 		}
 
@@ -172,11 +173,11 @@ func getSelectFunctors(attr *parser.Decl) ([]selectFunctor, error) {
 
 	for i := range attr.Decl {
 
-		if attr.Decl[i].Token == parser.FromToken {
+		if attr.Decl[i].Token == lexer.FromToken {
 			break
 		}
 
-		if attr.Decl[i].Token == parser.CountToken {
+		if attr.Decl[i].Token == lexer.CountToken {
 			f := &countSelectFunction{}
 			functors = append(functors, f)
 		}
@@ -219,7 +220,7 @@ func (f *defaultSelectFunction) FeedVirtualRow(vrow virtualRow) error {
 
 		switch v := val.v.(type) {
 		case time.Time:
-			row = append(row, v.Format(parser.DateLongFormat))
+			row = append(row, v.Format(lexer.DateLongFormat))
 		default:
 			row = append(row, fmt.Sprintf("%v", v))
 		}
@@ -288,7 +289,7 @@ func inExecutor(inDecl *parser.Decl, p *Predicate) error {
 func isExecutor(isDecl *parser.Decl, p *Predicate) error {
 	isDecl.Stringy(0)
 
-	if isDecl.Decl[0].Token == parser.NullToken {
+	if isDecl.Decl[0].Token == lexer.NullToken {
 		p.Operator = isNullOperator
 	} else {
 		p.Operator = isNotNullOperator
@@ -345,7 +346,7 @@ func whereExecutor2(e *Engine, decl []*parser.Decl, fromTableName string) (Predi
 
 	for i, cond := range decl {
 
-		if cond.Token == parser.AndToken {
+		if cond.Token == lexer.AndToken {
 			if i+1 == len(decl) {
 				return nil, fmt.Errorf("query error: AND not followed by any predicate")
 			}
@@ -354,7 +355,7 @@ func whereExecutor2(e *Engine, decl []*parser.Decl, fromTableName string) (Predi
 			return p, err
 		}
 
-		if cond.Token == parser.OrToken {
+		if cond.Token == lexer.OrToken {
 			if i+1 == len(decl) {
 				return nil, fmt.Errorf("query error: OR not followd by any predicate")
 			}
@@ -373,7 +374,7 @@ func whereExecutor2(e *Engine, decl []*parser.Decl, fromTableName string) (Predi
 	}
 
 	switch cond.Decl[0].Token {
-	case parser.IsToken, parser.InToken, parser.EqualityToken, parser.LeftDipleToken, parser.RightDipleToken, parser.LessOrEqualToken, parser.GreaterOrEqualToken:
+	case lexer.IsToken, lexer.InToken, lexer.EqualityToken, lexer.LeftDipleToken, lexer.RightDipleToken, lexer.LessOrEqualToken, lexer.GreaterOrEqualToken:
 		break
 	default:
 		fromTableName = cond.Decl[0].Lexeme
@@ -388,7 +389,7 @@ func whereExecutor2(e *Engine, decl []*parser.Decl, fromTableName string) (Predi
 	}
 
 	// Handle IN keyword
-	if cond.Decl[0].Token == parser.InToken {
+	if cond.Decl[0].Token == lexer.InToken {
 		err := inExecutor(cond.Decl[0], p)
 		if err != nil {
 			return nil, err
@@ -398,7 +399,7 @@ func whereExecutor2(e *Engine, decl []*parser.Decl, fromTableName string) (Predi
 	}
 
 	// Handle IS NULL and IS NOT NULL
-	if cond.Decl[0].Token == parser.IsToken {
+	if cond.Decl[0].Token == lexer.IsToken {
 		err := isExecutor(cond.Decl[0], p)
 		if err != nil {
 			return nil, err
@@ -454,13 +455,13 @@ func whereExecutor(whereDecl *parser.Decl, fromTableName string) ([]Predicate, e
 		}
 
 		switch cond.Decl[0].Token {
-		case parser.EqualityToken, parser.LeftDipleToken, parser.RightDipleToken, parser.LessOrEqualToken, parser.GreaterOrEqualToken:
+		case lexer.EqualityToken, lexer.LeftDipleToken, lexer.RightDipleToken, lexer.LessOrEqualToken, lexer.GreaterOrEqualToken:
 			log.Debug("whereExecutor: it's = < > <= >=\n")
 			break
-		case parser.InToken:
+		case lexer.InToken:
 			log.Debug("whereExecutor: it's IN\n")
 			break
-		case parser.IsToken:
+		case lexer.IsToken:
 			log.Debug("whereExecutor: it's IS token\n")
 			log.Debug("whereExecutor: %+v\n", cond.Decl[0])
 			break
@@ -474,7 +475,7 @@ func whereExecutor(whereDecl *parser.Decl, fromTableName string) ([]Predicate, e
 		p.LeftValue.lexeme = whereDecl.Decl[i].Lexeme
 
 		// Handle IN keyword
-		if cond.Decl[0].Token == parser.InToken {
+		if cond.Decl[0].Token == lexer.InToken {
 			err := inExecutor(cond.Decl[0], &p)
 			if err != nil {
 				return nil, err
@@ -485,7 +486,7 @@ func whereExecutor(whereDecl *parser.Decl, fromTableName string) ([]Predicate, e
 		}
 
 		// Handle IS NULL and IS NOT NULL
-		if cond.Decl[0].Token == parser.IsToken {
+		if cond.Decl[0].Token == lexer.IsToken {
 			err := isExecutor(cond.Decl[0], &p)
 			if err != nil {
 				return nil, err
@@ -544,7 +545,7 @@ func getSelectedAttribute(e *Engine, attr *parser.Decl, tables []*Table) ([]Attr
 	}
 
 	switch attr.Token {
-	case parser.StarToken:
+	case lexer.StarToken:
 		for _, table := range tables {
 			r := e.relation(table.name)
 			if r == nil {
@@ -552,7 +553,7 @@ func getSelectedAttribute(e *Engine, attr *parser.Decl, tables []*Table) ([]Attr
 			}
 			attributes = append(attributes, r.table.attributes...)
 		}
-	case parser.CountToken:
+	case lexer.CountToken:
 		err := attributesExistInTables(e, []Attribute{NewAttribute(attr.Decl[0].Lexeme, "", false)}, t)
 		if err != nil && attr.Decl[0].Lexeme != "*" {
 			return nil, err
@@ -560,18 +561,18 @@ func getSelectedAttribute(e *Engine, attr *parser.Decl, tables []*Table) ([]Attr
 		attribute := NewAttribute("COUNT", "int", false)
 
 		if len(attr.Decl) == 2 {
-			if attr.Decl[1].Token != parser.AsToken {
+			if attr.Decl[1].Token != lexer.AsToken {
 				return nil, fmt.Errorf("SELECT attribute definition encountered unexpected token (%s) while expecting AS", attr.Decl[1].Lexeme)
 			}
 
-			if len(attr.Decl[1].Decl) != 1 || attr.Decl[1].Decl[0].Token != parser.StringToken {
+			if len(attr.Decl[1].Decl) != 1 || attr.Decl[1].Decl[0].Token != lexer.StringToken {
 				return nil, fmt.Errorf("SELECT attribute definition encountered unexpected token (%s) while expecting AS <STRING>", attr.Decl[1].Decl[0].Lexeme)
 			}
 			attribute.selectAs = attr.Decl[1].Decl[0].Lexeme
 		}
 
 		attributes = append(attributes, attribute)
-	case parser.StringToken:
+	case lexer.StringToken:
 		attributeName := attr.Lexeme
 		attributeRename := ""
 		if len(attr.Decl) == 2 { // <TABLE-NAME> 'AS' ...
@@ -582,12 +583,12 @@ func getSelectedAttribute(e *Engine, attr *parser.Decl, tables []*Table) ([]Attr
 			}
 			attributeName = tableName + "." + attributeName
 			// 1: 'AS' ...
-			if attr.Decl[1].Token != parser.AsToken {
+			if attr.Decl[1].Token != lexer.AsToken {
 				return nil, fmt.Errorf("SELECT attribute definition encountered unexpected token (%s) while expecting AS", attr.Decl[1].Lexeme)
 			}
 			attributeRename = attr.Decl[1].Decl[0].Lexeme
 		} else if len(attr.Decl) == 1 { // <TABLE-NAME> || 'AS' ...
-			if attr.Decl[0].Token != parser.AsToken {
+			if attr.Decl[0].Token != lexer.AsToken {
 				// <TABLE-NAME>
 				tableName := attr.Decl[0].Lexeme
 				if err := attributeExistsInTable(e, attributeName, tableName); err != nil {

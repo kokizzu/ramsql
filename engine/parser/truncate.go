@@ -1,10 +1,14 @@
 package parser
 
+import (
+	"github.com/mlhoyt/ramsql/engine/parser/lexer"
+)
+
 func (p *parser) parseTruncate() (*Instruction, error) {
 	i := &Instruction{}
 
 	// Set TRUNCATE decl
-	trDecl, err := p.consumeToken(TruncateToken)
+	trDecl, err := p.consumeToken(lexer.TruncateToken)
 	if err != nil {
 		return nil, err
 	}

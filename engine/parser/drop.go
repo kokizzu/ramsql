@@ -2,13 +2,14 @@ package parser
 
 import (
 	"github.com/mlhoyt/ramsql/engine/log"
+	"github.com/mlhoyt/ramsql/engine/parser/lexer"
 )
 
 func (p *parser) parseDrop() (*Instruction, error) {
 	i := &Instruction{}
 
 	// Required: DROP
-	dropDecl, err := p.consumeToken(DropToken)
+	dropDecl, err := p.consumeToken(lexer.DropToken)
 	if err != nil {
 		log.Debug("WTF\n")
 		return nil, err
@@ -16,7 +17,7 @@ func (p *parser) parseDrop() (*Instruction, error) {
 	i.Decls = append(i.Decls, dropDecl)
 
 	// Required: TABLE
-	tableDecl, err := p.consumeToken(TableToken)
+	tableDecl, err := p.consumeToken(lexer.TableToken)
 	if err != nil {
 		log.Debug("Consume table !\n")
 		return nil, err
@@ -24,19 +25,19 @@ func (p *parser) parseDrop() (*Instruction, error) {
 	dropDecl.Add(tableDecl)
 
 	// Optional: IF EXISTS
-	if p.is(IfToken) {
-		ifDecl, err := p.consumeToken(IfToken)
+	if p.is(lexer.IfToken) {
+		ifDecl, err := p.consumeToken(lexer.IfToken)
 		if err != nil {
 			return nil, err
 		}
 		tableDecl.Add(ifDecl)
 
 		// Required: EXISTS
-		if !p.is(ExistsToken) {
+		if !p.is(lexer.ExistsToken) {
 			return nil, p.syntaxError()
 		}
 
-		existsDecl, err := p.consumeToken(ExistsToken)
+		existsDecl, err := p.consumeToken(lexer.ExistsToken)
 		if err != nil {
 			return nil, err
 		}

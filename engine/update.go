@@ -7,6 +7,7 @@ import (
 
 	"github.com/mlhoyt/ramsql/engine/log"
 	"github.com/mlhoyt/ramsql/engine/parser"
+	"github.com/mlhoyt/ramsql/engine/parser/lexer"
 	"github.com/mlhoyt/ramsql/engine/protocol"
 )
 
@@ -109,10 +110,10 @@ func updateValues(r *Relation, row int, values map[string]interface{}) error {
 					val = (func() interface{})(valVal)()
 				case time.Time:
 					// format time.Time into parsable string
-					val = valVal.Format(parser.DateLongFormat)
+					val = valVal.Format(lexer.DateLongFormat)
 				case string:
 					if valVal == "current_timestamp" || valVal == "now()" {
-						val = time.Now().Format(parser.DateLongFormat)
+						val = time.Now().Format(lexer.DateLongFormat)
 					}
 				}
 			}

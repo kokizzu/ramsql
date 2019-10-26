@@ -8,6 +8,7 @@ import (
 
 	"github.com/mlhoyt/ramsql/engine/log"
 	"github.com/mlhoyt/ramsql/engine/parser"
+	"github.com/mlhoyt/ramsql/engine/parser/lexer"
 	"github.com/mlhoyt/ramsql/engine/protocol"
 )
 
@@ -36,18 +37,18 @@ func New(endpoint protocol.EngineEndpoint) (e *Engine, err error) {
 	e.stop = make(chan bool)
 
 	e.opsExecutors = map[int]executor{
-		parser.CreateToken:   createExecutor,
-		parser.TableToken:    createTableExecutor,
-		parser.SelectToken:   selectExecutor,
-		parser.InsertToken:   insertIntoTableExecutor,
-		parser.DeleteToken:   deleteExecutor,
-		parser.UpdateToken:   updateExecutor,
-		parser.IfToken:       ifExecutor,
-		parser.NotToken:      notExecutor,
-		parser.ExistsToken:   existsExecutor,
-		parser.TruncateToken: truncateExecutor,
-		parser.DropToken:     dropExecutor,
-		parser.GrantToken:    grantExecutor,
+		lexer.CreateToken:   createExecutor,
+		lexer.TableToken:    createTableExecutor,
+		lexer.SelectToken:   selectExecutor,
+		lexer.InsertToken:   insertIntoTableExecutor,
+		lexer.DeleteToken:   deleteExecutor,
+		lexer.UpdateToken:   updateExecutor,
+		lexer.IfToken:       ifExecutor,
+		lexer.NotToken:      notExecutor,
+		lexer.ExistsToken:   existsExecutor,
+		lexer.TruncateToken: truncateExecutor,
+		lexer.DropToken:     dropExecutor,
+		lexer.GrantToken:    grantExecutor,
 	}
 
 	e.relations = make(map[string]*Relation)

@@ -7,11 +7,12 @@ import (
 	"fmt"
 
 	"github.com/mlhoyt/ramsql/engine/log"
+	"github.com/mlhoyt/ramsql/engine/parser/lexer"
 )
 
 // The parser structure holds the parser's internal state.
 type parser struct {
-	tokens   []Token
+	tokens   []lexer.Token
 	tokenLen int
 	index    int
 
@@ -19,7 +20,7 @@ type parser struct {
 }
 
 // NewParser returns a parser object initialized with a list of tokens
-func NewParser(tokens []Token) parser {
+func NewParser(tokens []lexer.Token) parser {
 	p := parser{
 		tokens: stripSpaces(tokens),
 		index:  0,
@@ -36,13 +37,13 @@ func (p *parser) parse() ([]Instruction, error) {
 		// fmt.Printf("Token index : %d\n", p.index)
 
 		// Found a new instruction
-		if p.cur().Token == SemicolonToken {
+		if p.cur().Token == lexer.SemicolonToken {
 			p.index++
 			continue
 		}
 
 		// Ignore space token, not needed anymore
-		if p.cur().Token == SpaceToken {
+		if p.cur().Token == lexer.SpaceToken {
 			p.index++
 			continue
 		}
@@ -52,49 +53,49 @@ func (p *parser) parse() ([]Instruction, error) {
 		// We start with first order query
 		// CREATE, SELECT, INSERT, UPDATE, DELETE, TRUNCATE, DROP, EXPLAIN
 		switch p.cur().Token {
-		case CreateToken:
+		case lexer.CreateToken:
 			i, err := p.parseCreate()
 			if err != nil {
 				return nil, err
 			}
 			p.i = append(p.i, *i)
 			break
-		case SelectToken:
+		case lexer.SelectToken:
 			i, err := p.parseSelect()
 			if err != nil {
 				return nil, err
 			}
 			p.i = append(p.i, *i)
 			break
-		case InsertToken:
+		case lexer.InsertToken:
 			i, err := p.parseInsert()
 			if err != nil {
 				return nil, err
 			}
 			p.i = append(p.i, *i)
 			break
-		case UpdateToken:
+		case lexer.UpdateToken:
 			i, err := p.parseUpdate()
 			if err != nil {
 				return nil, err
 			}
 			p.i = append(p.i, *i)
 			break
-		case DeleteToken:
+		case lexer.DeleteToken:
 			i, err := p.parseDelete()
 			if err != nil {
 				return nil, err
 			}
 			p.i = append(p.i, *i)
 			break
-		case TruncateToken:
+		case lexer.TruncateToken:
 			i, err := p.parseTruncate()
 			if err != nil {
 				return nil, err
 			}
 			p.i = append(p.i, *i)
 			break
-		case DropToken:
+		case lexer.DropToken:
 			log.Debug("HEY DROP HERE !\n")
 			i, err := p.parseDrop()
 			if err != nil {
@@ -102,11 +103,11 @@ func (p *parser) parse() ([]Instruction, error) {
 			}
 			p.i = append(p.i, *i)
 			break
-		case ExplainToken:
+		case lexer.ExplainToken:
 			break
-		case GrantToken:
+		case lexer.GrantToken:
 			i := &Instruction{}
-			i.Decls = append(i.Decls, NewDecl(Token{Token: GrantToken}))
+			i.Decls = append(i.Decls, NewDecl(lexer.Token{Token: lexer.GrantToken}))
 			p.i = append(p.i, *i)
 			return p.i, nil
 		default:
@@ -121,7 +122,7 @@ func (p *parser) parseUpdate() (*Instruction, error) {
 	i := &Instruction{}
 
 	// Set DELETE decl
-	updateDecl, err := p.consumeToken(UpdateToken)
+	updateDecl, err := p.consumeToken(lexer.UpdateToken)
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +136,7 @@ func (p *parser) parseUpdate() (*Instruction, error) {
 	updateDecl.Add(nameDecl)
 
 	// should be SET
-	setDecl, err := p.consumeToken(SetToken)
+	setDecl, err := p.consumeToken(lexer.SetToken)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +144,7 @@ func (p *parser) parseUpdate() (*Instruction, error) {
 
 	// should be a list of equality
 	gotClause := false
-	for p.cur().Token != WhereToken {
+	for p.cur().Token != lexer.WhereToken {
 
 		if !p.hasNext() && gotClause {
 			break
@@ -154,7 +155,7 @@ func (p *parser) parseUpdate() (*Instruction, error) {
 			return nil, err
 		}
 		setDecl.Add(attributeDecl)
-		p.consumeToken(CommaToken)
+		p.consumeToken(lexer.CommaToken)
 
 		// Got at least one clause
 		gotClause = true
@@ -172,14 +173,14 @@ func (p *parser) parseInsert() (*Instruction, error) {
 	i := &Instruction{}
 
 	// Required: INSERT
-	insertDecl, err := p.consumeToken(InsertToken)
+	insertDecl, err := p.consumeToken(lexer.InsertToken)
 	if err != nil {
 		return nil, err
 	}
 	i.Decls = append(i.Decls, insertDecl)
 
 	// Required: INTO
-	intoDecl, err := p.consumeToken(IntoToken)
+	intoDecl, err := p.consumeToken(lexer.IntoToken)
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +194,7 @@ func (p *parser) parseInsert() (*Instruction, error) {
 	intoDecl.Add(tableDecl)
 
 	// Required: '('
-	_, err = p.consumeToken(BracketOpeningToken)
+	_, err = p.consumeToken(lexer.BracketOpeningToken)
 	if err != nil {
 		return nil, err
 	}
@@ -206,29 +207,29 @@ func (p *parser) parseInsert() (*Instruction, error) {
 		}
 		tableDecl.Add(decl)
 
-		if p.is(BracketClosingToken) {
-			if _, err = p.consumeToken(BracketClosingToken); err != nil {
+		if p.is(lexer.BracketClosingToken) {
+			if _, err = p.consumeToken(lexer.BracketClosingToken); err != nil {
 				return nil, err
 			}
 
 			break
 		}
 
-		_, err = p.consumeToken(CommaToken)
+		_, err = p.consumeToken(lexer.CommaToken)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	// Required: VALUES
-	valuesDecl, err := p.consumeToken(ValuesToken)
+	valuesDecl, err := p.consumeToken(lexer.ValuesToken)
 	if err != nil {
 		return nil, err
 	}
 	insertDecl.Add(valuesDecl)
 
 	// Required: '('
-	_, err = p.consumeToken(BracketOpeningToken)
+	_, err = p.consumeToken(lexer.BracketOpeningToken)
 	if err != nil {
 		return nil, err
 	}
@@ -241,19 +242,19 @@ func (p *parser) parseInsert() (*Instruction, error) {
 		}
 		valuesDecl.Add(decl)
 
-		if p.is(BracketClosingToken) {
-			p.consumeToken(BracketClosingToken)
+		if p.is(lexer.BracketClosingToken) {
+			p.consumeToken(lexer.BracketClosingToken)
 			break
 		}
 
-		_, err = p.consumeToken(CommaToken)
+		_, err = p.consumeToken(lexer.CommaToken)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	// Optional: RETURNING ...
-	if retDecl, err := p.consumeToken(ReturningToken); err == nil {
+	if retDecl, err := p.consumeToken(lexer.ReturningToken); err == nil {
 		insertDecl.Add(retDecl)
 		attrDecl, err := p.parseAttribute()
 		if err != nil {
@@ -266,23 +267,23 @@ func (p *parser) parseInsert() (*Instruction, error) {
 }
 
 func (p *parser) parseType() (*Decl, error) {
-	typeDecl, err := p.consumeToken(StringToken)
+	typeDecl, err := p.consumeToken(lexer.StringToken)
 	if err != nil {
 		return nil, err
 	}
 
 	// Maybe a complex type
-	if p.is(BracketOpeningToken) {
-		_, err = p.consumeToken(BracketOpeningToken)
+	if p.is(lexer.BracketOpeningToken) {
+		_, err = p.consumeToken(lexer.BracketOpeningToken)
 		if err != nil {
 			return nil, err
 		}
-		sizeDecl, err := p.consumeToken(NumberToken)
+		sizeDecl, err := p.consumeToken(lexer.NumberToken)
 		if err != nil {
 			return nil, err
 		}
 		typeDecl.Add(sizeDecl)
-		_, err = p.consumeToken(BracketClosingToken)
+		_, err = p.consumeToken(lexer.BracketClosingToken)
 		if err != nil {
 			return nil, err
 		}
@@ -292,13 +293,13 @@ func (p *parser) parseType() (*Decl, error) {
 }
 
 func (p *parser) parseOrderBy(selectDecl *Decl) error {
-	orderDecl, err := p.consumeToken(OrderToken)
+	orderDecl, err := p.consumeToken(lexer.OrderToken)
 	if err != nil {
 		return err
 	}
 	selectDecl.Add(orderDecl)
 
-	_, err = p.consumeToken(ByToken)
+	_, err = p.consumeToken(lexer.ByToken)
 	if err != nil {
 		return err
 	}
@@ -311,8 +312,8 @@ func (p *parser) parseOrderBy(selectDecl *Decl) error {
 	orderDecl.Add(attrDecl)
 
 	// Parse multiple ordering
-	for p.cur().Token == CommaToken {
-		_, err := p.consumeToken(CommaToken)
+	for p.cur().Token == lexer.CommaToken {
+		_, err := p.consumeToken(lexer.CommaToken)
 		if err != nil {
 			return nil
 		}
@@ -327,8 +328,8 @@ func (p *parser) parseOrderBy(selectDecl *Decl) error {
 
 	// ASC ? DESC ? nothing ?
 	t := p.cur().Token
-	if t == AscToken || t == DescToken {
-		decl, err := p.consumeToken(AscToken, DescToken)
+	if t == lexer.AscToken || t == lexer.DescToken {
+		decl, err := p.consumeToken(lexer.AscToken, lexer.DescToken)
 		if err != nil {
 			return err
 		}
@@ -342,7 +343,7 @@ func (p *parser) parseWhere(selectDecl *Decl) error {
 
 	// May be WHERE  here
 	// Can be ORDER BY if WHERE cause if implicit
-	whereDecl, err := p.consumeToken(WhereToken)
+	whereDecl, err := p.consumeToken(lexer.WhereToken)
 	if err != nil {
 		return err
 	}
@@ -355,7 +356,7 @@ func (p *parser) parseWhere(selectDecl *Decl) error {
 			break
 		}
 
-		if p.is(OrderToken, LimitToken, ForToken) {
+		if p.is(lexer.OrderToken, lexer.LimitToken, lexer.ForToken) {
 			break
 		}
 
@@ -365,7 +366,7 @@ func (p *parser) parseWhere(selectDecl *Decl) error {
 		}
 		whereDecl.Add(attributeDecl)
 
-		if p.is(AndToken, OrToken) {
+		if p.is(lexer.AndToken, lexer.OrToken) {
 			linkDecl, err := p.consumeToken(p.cur().Token)
 			if err != nil {
 				return err
@@ -386,13 +387,13 @@ func (p *parser) parseBuiltinFunc() (*Decl, error) {
 	var err error
 
 	// COUNT(attribute)
-	if p.is(CountToken) {
-		d, err = p.consumeToken(CountToken)
+	if p.is(lexer.CountToken) {
+		d, err = p.consumeToken(lexer.CountToken)
 		if err != nil {
 			return nil, err
 		}
 		// Bracket
-		_, err = p.consumeToken(BracketOpeningToken)
+		_, err = p.consumeToken(lexer.BracketOpeningToken)
 		if err != nil {
 			return nil, err
 		}
@@ -403,7 +404,7 @@ func (p *parser) parseBuiltinFunc() (*Decl, error) {
 		}
 		d.Add(attr)
 		// Bracket
-		_, err = p.consumeToken(BracketClosingToken)
+		_, err = p.consumeToken(lexer.BracketClosingToken)
 		if err != nil {
 			return nil, err
 		}
@@ -419,27 +420,27 @@ func (p *parser) parseBuiltinFunc() (*Decl, error) {
 // foo
 func (p *parser) parseAttribute() (*Decl, error) {
 	quoted := false
-	quoteToken := DoubleQuoteToken
+	quoteDelimiter := lexer.DoubleQuoteToken
 
-	if p.is(DoubleQuoteToken) || p.is(BacktickToken) {
+	if p.is(lexer.DoubleQuoteToken) || p.is(lexer.BacktickToken) {
 		quoted = true
-		quoteToken = p.cur().Token
+		quoteDelimiter = p.cur().Token
 		if err := p.next(); err != nil {
 			return nil, err
 		}
 	}
 
-	// shoud be a StringToken here
+	// shoud be a lexer.StringToken here
 	// If there is a point after, it's a table name,
 	// if not, it's the attribute
-	if !p.is(StringToken, StarToken) {
+	if !p.is(lexer.StringToken, lexer.StarToken) {
 		return nil, p.syntaxError()
 	}
 	attrDecl := NewDecl(p.cur())
 
 	if quoted {
 		// Check there is a closing quote
-		if _, err := p.mustHaveNext(quoteToken); err != nil {
+		if _, err := p.mustHaveNext(quoteDelimiter); err != nil {
 			log.Debug("parseAttribute: Missing closing quote")
 			return nil, err
 		}
@@ -450,14 +451,14 @@ func (p *parser) parseAttribute() (*Decl, error) {
 	}
 
 	// Optional: '.'
-	if p.is(PeriodToken) {
-		_, err := p.consumeToken(PeriodToken)
+	if p.is(lexer.PeriodToken) {
+		_, err := p.consumeToken(lexer.PeriodToken)
 		if err != nil {
 			return nil, err
 		}
 		// if so, next must be the attribute name or a star
 		tableDecl := attrDecl
-		attrDecl, err = p.consumeToken(StringToken, StarToken)
+		attrDecl, err = p.consumeToken(lexer.StringToken, lexer.StarToken)
 		if err != nil {
 			return nil, err
 		}
@@ -466,14 +467,14 @@ func (p *parser) parseAttribute() (*Decl, error) {
 	}
 
 	// Optional: AS ...
-	if p.is(AsToken) {
-		asDecl, err := p.consumeToken(AsToken)
+	if p.is(lexer.AsToken) {
+		asDecl, err := p.consumeToken(lexer.AsToken)
 		if err != nil {
 			return nil, err
 		}
 
 		// Required: <ATTRIBUTE-RENAME>
-		renameDecl, err := p.consumeToken(StringToken)
+		renameDecl, err := p.consumeToken(lexer.StringToken)
 		if err != nil {
 			return nil, err
 		}
@@ -485,31 +486,31 @@ func (p *parser) parseAttribute() (*Decl, error) {
 	return attrDecl, nil
 }
 
-// parseQuotedToken parse a token of the form <STRING>, '<STRING>', "<STRING>", `<STRING>`
+// lexer.parseQuotedToken parse a token of the form <STRING>, '<STRING>', "<STRING>", `<STRING>`
 func (p *parser) parseQuotedToken() (*Decl, error) {
 	quoted := false
-	quoteToken := DoubleQuoteToken
+	quoteDelimiter := lexer.DoubleQuoteToken
 
-	if p.is(SimpleQuoteToken) || p.is(DoubleQuoteToken) || p.is(BacktickToken) {
+	if p.is(lexer.SimpleQuoteToken) || p.is(lexer.DoubleQuoteToken) || p.is(lexer.BacktickToken) {
 		quoted = true
-		quoteToken = p.cur().Token
+		quoteDelimiter = p.cur().Token
 		if err := p.next(); err != nil {
 			return nil, err
 		}
 	}
 
-	// shoud be a StringToken or keyword token
-	if !p.is(StringToken) && !p.cur().IsAWord() {
+	// shoud be a lexer.StringToken or keyword token
+	if !p.is(lexer.StringToken) && !p.cur().IsAWord() {
 		return nil, p.syntaxError()
 	}
 	decl := &Decl{
-		Token:  StringToken,
+		Token:  lexer.StringToken,
 		Lexeme: p.cur().Lexeme,
 	}
 
 	if quoted {
 		// Check there is a closing quote
-		if _, err := p.mustHaveNext(quoteToken); err != nil {
+		if _, err := p.mustHaveNext(quoteDelimiter); err != nil {
 			return nil, err
 		}
 	}
@@ -521,15 +522,15 @@ func (p *parser) parseQuotedToken() (*Decl, error) {
 func (p *parser) parseCondition() (*Decl, error) {
 
 	// We may have the WHERE 1 condition
-	if t := p.cur(); t.Token == NumberToken && t.Lexeme == "1" {
+	if t := p.cur(); t.Token == lexer.NumberToken && t.Lexeme == "1" {
 		attributeDecl := NewDecl(t)
 		p.next()
 		// in case of 1 = 1
-		if p.cur().Token == EqualityToken {
-			t, err := p.isNext(NumberToken)
+		if p.cur().Token == lexer.EqualityToken {
+			t, err := p.isNext(lexer.NumberToken)
 			if err == nil && t.Lexeme == "1" {
-				p.consumeToken(EqualityToken)
-				p.consumeToken(NumberToken)
+				p.consumeToken(lexer.EqualityToken)
+				p.consumeToken(lexer.NumberToken)
 			}
 		}
 		return attributeDecl, nil
@@ -542,38 +543,38 @@ func (p *parser) parseCondition() (*Decl, error) {
 	}
 
 	switch p.cur().Token {
-	case EqualityToken, LeftDipleToken, RightDipleToken, LessOrEqualToken, GreaterOrEqualToken:
+	case lexer.EqualityToken, lexer.LeftDipleToken, lexer.RightDipleToken, lexer.LessOrEqualToken, lexer.GreaterOrEqualToken:
 		decl, err := p.consumeToken(p.cur().Token)
 		if err != nil {
 			return nil, err
 		}
 		attributeDecl.Add(decl)
 		break
-	case InToken:
+	case lexer.InToken:
 		inDecl, err := p.parseIn()
 		if err != nil {
 			return nil, err
 		}
 		attributeDecl.Add(inDecl)
 		return attributeDecl, nil
-	case IsToken:
-		log.Debug("parseCondition: IsToken\n")
-		decl, err := p.consumeToken(IsToken)
+	case lexer.IsToken:
+		log.Debug("parseCondition: lexer.IsToken\n")
+		decl, err := p.consumeToken(lexer.IsToken)
 		if err != nil {
 			return nil, err
 		}
 		attributeDecl.Add(decl)
-		if p.cur().Token == NotToken {
-			log.Debug("parseCondition: NotToken\n")
-			notDecl, err := p.consumeToken(NotToken)
+		if p.cur().Token == lexer.NotToken {
+			log.Debug("parseCondition: lexer.NotToken\n")
+			notDecl, err := p.consumeToken(lexer.NotToken)
 			if err != nil {
 				return nil, err
 			}
 			decl.Add(notDecl)
 		}
-		if p.cur().Token == NullToken {
-			log.Debug("parseCondition: NullToken\n")
-			nullDecl, err := p.consumeToken(NullToken)
+		if p.cur().Token == lexer.NullToken {
+			log.Debug("parseCondition: lexer.NullToken\n")
+			nullDecl, err := p.consumeToken(lexer.NullToken)
 			if err != nil {
 				return nil, err
 			}
@@ -592,13 +593,13 @@ func (p *parser) parseCondition() (*Decl, error) {
 }
 
 func (p *parser) parseIn() (*Decl, error) {
-	inDecl, err := p.consumeToken(InToken)
+	inDecl, err := p.consumeToken(lexer.InToken)
 	if err != nil {
 		return nil, err
 	}
 
 	// bracket opening
-	_, err = p.consumeToken(BracketOpeningToken)
+	_, err = p.consumeToken(lexer.BracketOpeningToken)
 	if err != nil {
 		return nil, err
 	}
@@ -613,15 +614,15 @@ func (p *parser) parseIn() (*Decl, error) {
 		inDecl.Add(v)
 		gotList = true
 
-		if p.is(BracketClosingToken) {
+		if p.is(lexer.BracketClosingToken) {
 			if gotList == false {
 				return nil, fmt.Errorf("IN clause: empty list of value")
 			}
-			p.consumeToken(BracketClosingToken)
+			p.consumeToken(lexer.BracketClosingToken)
 			break
 		}
 
-		_, err = p.consumeToken(CommaToken)
+		_, err = p.consumeToken(lexer.CommaToken)
 		if err != nil {
 			return nil, err
 		}
@@ -635,16 +636,16 @@ func (p *parser) parseValue() (*Decl, error) {
 	defer debug("~parseValue")
 	quoted := false
 
-	if p.is(SimpleQuoteToken) || p.is(DoubleQuoteToken) {
+	if p.is(lexer.SimpleQuoteToken) || p.is(lexer.DoubleQuoteToken) {
 		quoted = true
 		debug("value %v is quoted!", p.cur())
-		_, err := p.consumeToken(SimpleQuoteToken, DoubleQuoteToken)
+		_, err := p.consumeToken(lexer.SimpleQuoteToken, lexer.DoubleQuoteToken)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	valueDecl, err := p.consumeToken(StringToken, NumberToken, DateToken, NowToken, LocalTimestampToken)
+	valueDecl, err := p.consumeToken(lexer.StringToken, lexer.NumberToken, lexer.DateToken, lexer.NowToken, lexer.LocalTimestampToken)
 	if err != nil {
 		debug("parseValue: Wasn't expecting %v\n", p.cur())
 		return nil, err
@@ -653,7 +654,7 @@ func (p *parser) parseValue() (*Decl, error) {
 
 	if quoted {
 		log.Debug("consume quote %v\n", p.cur())
-		_, err := p.consumeToken(SimpleQuoteToken, DoubleQuoteToken)
+		_, err := p.consumeToken(lexer.SimpleQuoteToken, lexer.DoubleQuoteToken)
 		if err != nil {
 			debug("uuuh, wasn't a quote")
 			return nil, err
@@ -666,7 +667,7 @@ func (p *parser) parseValue() (*Decl, error) {
 // parseJoin parses the JOIN keywords and all its condition
 // JOIN user_addresses ON address.id=user_addresses.address_id
 func (p *parser) parseJoin() (*Decl, error) {
-	joinDecl, err := p.consumeToken(JoinToken)
+	joinDecl, err := p.consumeToken(lexer.JoinToken)
 	if err != nil {
 		return nil, err
 	}
@@ -679,7 +680,7 @@ func (p *parser) parseJoin() (*Decl, error) {
 	joinDecl.Add(tableDecl)
 
 	// ON
-	onDecl, err := p.consumeToken(OnToken)
+	onDecl, err := p.consumeToken(lexer.OnToken)
 	if err != nil {
 		return nil, err
 	}
@@ -694,7 +695,7 @@ func (p *parser) parseJoin() (*Decl, error) {
 	onDecl.Add(leftAttributeDecl)
 
 	// EQUAL
-	equalAttr, err := p.consumeToken(EqualityToken)
+	equalAttr, err := p.consumeToken(lexer.EqualityToken)
 	if err != nil {
 		return nil, err
 	}
@@ -714,27 +715,27 @@ func (p *parser) parseListElement() (*Decl, error) {
 	quoted := false
 
 	// In case of INSERT, can be DEFAULT here
-	if p.is(DefaultToken) {
-		v, err := p.consumeToken(DefaultToken)
+	if p.is(lexer.DefaultToken) {
+		v, err := p.consumeToken(lexer.DefaultToken)
 		if err != nil {
 			return nil, err
 		}
 		return v, nil
 	}
 
-	if p.is(SimpleQuoteToken) || p.is(DoubleQuoteToken) {
+	if p.is(lexer.SimpleQuoteToken) || p.is(lexer.DoubleQuoteToken) {
 		quoted = true
 		p.next()
 	}
 
 	var valueDecl *Decl
-	valueDecl, err := p.consumeToken(StringToken, NumberToken, NullToken, DateToken, NowToken, FalseToken)
+	valueDecl, err := p.consumeToken(lexer.StringToken, lexer.NumberToken, lexer.NullToken, lexer.DateToken, lexer.NowToken, lexer.FalseToken)
 	if err != nil {
 		return nil, err
 	}
 
 	if quoted {
-		if _, err := p.consumeToken(SimpleQuoteToken, DoubleQuoteToken); err != nil {
+		if _, err := p.consumeToken(lexer.SimpleQuoteToken, lexer.DoubleQuoteToken); err != nil {
 			return nil, err
 		}
 	}
@@ -758,15 +759,15 @@ func (p *parser) next() error {
 	return nil
 }
 
-func (p *parser) peekBackward() Token {
+func (p *parser) peekBackward() lexer.Token {
 	return p.tokens[p.index-1]
 }
 
-func (p *parser) cur() Token {
+func (p *parser) cur() lexer.Token {
 	return p.tokens[p.index]
 }
 
-func (p *parser) peekForward() Token {
+func (p *parser) peekForward() lexer.Token {
 	return p.tokens[p.index+1]
 }
 
@@ -785,7 +786,7 @@ func (p *parser) isNot(tokenTypes ...int) bool {
 	return !p.is(tokenTypes...)
 }
 
-func (p *parser) isNext(tokenTypes ...int) (t Token, err error) {
+func (p *parser) isNext(tokenTypes ...int) (t lexer.Token, err error) {
 
 	if !p.hasNext() {
 		debug("parser.isNext: has no next")
@@ -803,7 +804,7 @@ func (p *parser) isNext(tokenTypes ...int) (t Token, err error) {
 	return t, p.syntaxError()
 }
 
-func (p *parser) mustHaveNext(tokenTypes ...int) (t Token, err error) {
+func (p *parser) mustHaveNext(tokenTypes ...int) (t lexer.Token, err error) {
 
 	if !p.hasNext() {
 		debug("parser.mustHaveNext: has no next")
@@ -846,11 +847,11 @@ func (p *parser) syntaxError() error {
 	return fmt.Errorf("Syntax error near %v %v %v", p.peekBackward().Lexeme, p.cur().Lexeme, p.peekForward().Lexeme)
 }
 
-func stripSpaces(t []Token) []Token {
-	retT := []Token{}
+func stripSpaces(t []lexer.Token) []lexer.Token {
+	retT := []lexer.Token{}
 
 	for i := range t {
-		if t[i].Token != SpaceToken {
+		if t[i].Token != lexer.SpaceToken {
 			retT = append(retT, t[i])
 		}
 	}

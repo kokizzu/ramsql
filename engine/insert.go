@@ -8,6 +8,7 @@ import (
 
 	"github.com/mlhoyt/ramsql/engine/log"
 	"github.com/mlhoyt/ramsql/engine/parser"
+	"github.com/mlhoyt/ramsql/engine/parser/lexer"
 	"github.com/mlhoyt/ramsql/engine/protocol"
 )
 
@@ -37,7 +38,7 @@ func insertIntoTableExecutor(e *Engine, insertDecl *parser.Decl, conn protocol.E
 	var returnedID string
 	if len(insertDecl.Decl) > 2 {
 		for i := range insertDecl.Decl {
-			if insertDecl.Decl[i].Token == parser.ReturningToken {
+			if insertDecl.Decl[i].Token == lexer.ReturningToken {
 				returnedID = insertDecl.Decl[i].Lexeme
 				break
 			}
@@ -101,8 +102,8 @@ func insert(r *Relation, attributes []*parser.Decl, values []*parser.Decl, retur
 			if attr.name == decl.Lexeme && attr.autoIncrement == false {
 				// Before adding value in tuple, check it's not a builtin func or arithmetic operation
 				switch values[x].Token {
-				case parser.NowToken:
-					t.Append(time.Now().Format(parser.DateLongFormat))
+				case lexer.NowToken:
+					t.Append(time.Now().Format(lexer.DateLongFormat))
 				default:
 					t.Append(values[x].Lexeme)
 

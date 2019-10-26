@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/mlhoyt/ramsql/engine/log"
+	"github.com/mlhoyt/ramsql/engine/parser/lexer"
 )
 
 // Decl structure is the node to statement declaration tree
@@ -17,7 +18,7 @@ type Decl struct {
 }
 
 // NewDecl initialize a Decl struct from a given token
-func NewDecl(t Token) *Decl {
+func NewDecl(t lexer.Token) *Decl {
 	return &Decl{
 		Token:  t.Token,
 		Lexeme: t.Lexeme,

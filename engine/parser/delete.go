@@ -1,19 +1,21 @@
 package parser
 
-import ()
+import (
+	"github.com/mlhoyt/ramsql/engine/parser/lexer"
+)
 
 func (p *parser) parseDelete() (*Instruction, error) {
 	i := &Instruction{}
 
 	// Set DELETE decl
-	deleteDecl, err := p.consumeToken(DeleteToken)
+	deleteDecl, err := p.consumeToken(lexer.DeleteToken)
 	if err != nil {
 		return nil, err
 	}
 	i.Decls = append(i.Decls, deleteDecl)
 
 	// should be From
-	fromDecl, err := p.consumeToken(FromToken)
+	fromDecl, err := p.consumeToken(lexer.FromToken)
 	if err != nil {
 		return nil, err
 	}

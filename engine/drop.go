@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/mlhoyt/ramsql/engine/parser"
+	"github.com/mlhoyt/ramsql/engine/parser/lexer"
 	"github.com/mlhoyt/ramsql/engine/protocol"
 )
 
@@ -17,13 +18,13 @@ func dropExecutor(e *Engine, dropDecl *parser.Decl, conn protocol.EngineConn) er
 	// Required: TABLE
 	if dropDecl.Decl == nil ||
 		len(dropDecl.Decl) != 1 ||
-		dropDecl.Decl[0].Token != parser.TableToken {
+		dropDecl.Decl[0].Token != lexer.TableToken {
 		return fmt.Errorf("unexpected drop arguments")
 	}
 
 	// Optional: IF EXISTS
 	tableNameTokenIndex := 0
-	if dropDecl.Decl[0].Decl[0].Token == parser.IfToken {
+	if dropDecl.Decl[0].Decl[0].Token == lexer.IfToken {
 		allowNotFound = true
 		tableNameTokenIndex = 1
 	}

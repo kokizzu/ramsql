@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/mlhoyt/ramsql/engine/log"
+	"github.com/mlhoyt/ramsql/engine/parser/lexer"
 )
 
 func TestParserCreateTableNoAttrConstraints(t *testing.T) {
@@ -420,8 +421,8 @@ func TestUnique(t *testing.T) {
 func parse(query string, instructionCount int, t *testing.T) []Instruction {
 	log.UseTestLogger(t)
 
-	lexer := lexer{}
-	tokens, err := lexer.lex([]byte(query))
+	l := lexer.Lexer{}
+	tokens, err := l.Lex([]byte(query))
 	if err != nil {
 		t.Fatalf("Cannot lex <%s> string: %s", query, err)
 	}

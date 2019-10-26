@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	"github.com/mlhoyt/ramsql/engine/log"
-	"github.com/mlhoyt/ramsql/engine/parser"
+	"github.com/mlhoyt/ramsql/engine/parser/lexer"
 )
 
 // Rows implements the sql/driver Rows interface
@@ -94,7 +94,7 @@ func (r *Rows) Next(dest []driver.Value) (err error) {
 
 		// TODO: make rowsChannel send virtualRows,
 		// so we have the type and don't blindy try to parse date here
-		if t, err := parser.ParseDate(string(v)); err == nil {
+		if t, err := lexer.ParseDate(string(v)); err == nil {
 			dest[i] = *t
 		} else {
 

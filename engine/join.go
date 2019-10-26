@@ -6,6 +6,7 @@ import (
 
 	"github.com/mlhoyt/ramsql/engine/log"
 	"github.com/mlhoyt/ramsql/engine/parser"
+	"github.com/mlhoyt/ramsql/engine/parser/lexer"
 	"github.com/mlhoyt/ramsql/engine/protocol"
 )
 
@@ -231,14 +232,14 @@ func joinExecutor(decl *parser.Decl) (joiner, error) {
 	j := &inner{}
 
 	// Table name
-	if decl.Decl[0].Token != parser.StringToken {
+	if decl.Decl[0].Token != lexer.StringToken {
 		return nil, fmt.Errorf("join: expected table name, got %v", decl.Decl[0])
 	}
 	j.table = decl.Decl[0].Lexeme
 
 	// Predicate should be ON
 	on := decl.Decl[1]
-	if on.Token != parser.OnToken {
+	if on.Token != lexer.OnToken {
 		return nil, fmt.Errorf("join: expected ON, got %v", on)
 	}
 
