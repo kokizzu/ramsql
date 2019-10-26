@@ -8,6 +8,7 @@ import (
 	"github.com/mlhoyt/ramsql/engine/log"
 )
 
+// Lexer contains the state of the instruction being processed
 type Lexer struct {
 	tokens         []Token
 	instruction    []byte
@@ -190,6 +191,7 @@ type Matcher func() bool
 //go:generate ./lexer-generate-matcher.sh --lexeme "with"
 //go:generate ./lexer-generate-matcher.sh --lexeme "zone"
 
+// Lex accepts an instruction and returns the extracted token slice
 func (l *Lexer) Lex(instruction []byte) ([]Token, error) {
 	l.instructionLen = len(instruction)
 	l.tokens = nil
@@ -199,95 +201,95 @@ func (l *Lexer) Lex(instruction []byte) ([]Token, error) {
 
 	var matchers []Matcher
 	// Punctuation Matcher
-	matchers = append(matchers, l.MatchSpaceToken)
-	matchers = append(matchers, l.MatchSemicolonToken)
-	matchers = append(matchers, l.MatchCommaToken)
-	matchers = append(matchers, l.MatchBracketOpeningToken)
-	matchers = append(matchers, l.MatchBracketClosingToken)
-	matchers = append(matchers, l.MatchStarToken)
-	matchers = append(matchers, l.MatchSimpleQuoteToken)
-	matchers = append(matchers, l.MatchEqualityToken)
-	matchers = append(matchers, l.MatchPeriodToken)
-	matchers = append(matchers, l.MatchDoubleQuoteToken)
-	matchers = append(matchers, l.MatchLessOrEqualToken)
-	matchers = append(matchers, l.MatchLeftDipleToken)
-	matchers = append(matchers, l.MatchGreaterOrEqualToken)
-	matchers = append(matchers, l.MatchRightDipleToken)
-	matchers = append(matchers, l.MatchBacktickToken)
+	matchers = append(matchers, l.matchSpaceToken)
+	matchers = append(matchers, l.matchSemicolonToken)
+	matchers = append(matchers, l.matchCommaToken)
+	matchers = append(matchers, l.matchBracketOpeningToken)
+	matchers = append(matchers, l.matchBracketClosingToken)
+	matchers = append(matchers, l.matchStarToken)
+	matchers = append(matchers, l.matchSimpleQuoteToken)
+	matchers = append(matchers, l.matchEqualityToken)
+	matchers = append(matchers, l.matchPeriodToken)
+	matchers = append(matchers, l.matchDoubleQuoteToken)
+	matchers = append(matchers, l.matchLessOrEqualToken)
+	matchers = append(matchers, l.matchLeftDipleToken)
+	matchers = append(matchers, l.matchGreaterOrEqualToken)
+	matchers = append(matchers, l.matchRightDipleToken)
+	matchers = append(matchers, l.matchBacktickToken)
 	// First order Matcher
-	matchers = append(matchers, l.MatchCreateToken)
-	matchers = append(matchers, l.MatchDeleteToken)
-	matchers = append(matchers, l.MatchDropToken)
-	matchers = append(matchers, l.MatchGrantToken)
-	matchers = append(matchers, l.MatchInsertToken)
-	matchers = append(matchers, l.MatchSelectToken)
-	matchers = append(matchers, l.MatchTruncateToken)
-	matchers = append(matchers, l.MatchUpdateToken)
+	matchers = append(matchers, l.matchCreateToken)
+	matchers = append(matchers, l.matchDeleteToken)
+	matchers = append(matchers, l.matchDropToken)
+	matchers = append(matchers, l.matchGrantToken)
+	matchers = append(matchers, l.matchInsertToken)
+	matchers = append(matchers, l.matchSelectToken)
+	matchers = append(matchers, l.matchTruncateToken)
+	matchers = append(matchers, l.matchUpdateToken)
 	// Second order Matcher
-	matchers = append(matchers, l.MatchActionToken)
-	matchers = append(matchers, l.MatchAndToken)
-	matchers = append(matchers, l.MatchAscToken)
-	matchers = append(matchers, l.MatchAsToken)
-	matchers = append(matchers, l.MatchAutoincrementToken)
-	matchers = append(matchers, l.MatchBtreeToken)
-	matchers = append(matchers, l.MatchByToken)
-	matchers = append(matchers, l.MatchCascadeToken)
-	matchers = append(matchers, l.MatchCharacterToken)
-	matchers = append(matchers, l.MatchCharsetToken)
-	matchers = append(matchers, l.MatchConstraintToken)
-	matchers = append(matchers, l.MatchCountToken)
-	matchers = append(matchers, l.MatchDefaultToken)
-	matchers = append(matchers, l.MatchDescToken)
-	matchers = append(matchers, l.MatchEngineToken)
-	matchers = append(matchers, l.MatchExistsToken)
-	matchers = append(matchers, l.MatchFalseToken)
-	matchers = append(matchers, l.MatchForeignToken)
-	matchers = append(matchers, l.MatchForToken)
-	matchers = append(matchers, l.MatchFromToken)
-	matchers = append(matchers, l.MatchFullToken)
-	matchers = append(matchers, l.MatchHashToken)
-	matchers = append(matchers, l.MatchIfToken)
-	matchers = append(matchers, l.MatchIndexToken)
-	matchers = append(matchers, l.MatchInnerToken)
-	matchers = append(matchers, l.MatchIntoToken)
-	matchers = append(matchers, l.MatchInToken)
-	matchers = append(matchers, l.MatchIsToken)
-	matchers = append(matchers, l.MatchJoinToken)
-	matchers = append(matchers, l.MatchKeyToken)
-	matchers = append(matchers, l.MatchLeftToken)
-	matchers = append(matchers, l.MatchLimitToken)
-	matchers = append(matchers, l.MatchLocalTimestampToken)
-	matchers = append(matchers, l.MatchMatchToken)
-	matchers = append(matchers, l.MatchNotToken)
-	matchers = append(matchers, l.MatchNowToken)
-	matchers = append(matchers, l.MatchNoToken)
-	matchers = append(matchers, l.MatchNullToken)
-	matchers = append(matchers, l.MatchOffsetToken)
-	matchers = append(matchers, l.MatchOnToken)
-	matchers = append(matchers, l.MatchOrderToken)
-	matchers = append(matchers, l.MatchOrToken)
-	matchers = append(matchers, l.MatchOuterToken)
-	matchers = append(matchers, l.MatchPartialToken)
-	matchers = append(matchers, l.MatchPrimaryToken)
-	matchers = append(matchers, l.MatchReferencesToken)
-	matchers = append(matchers, l.MatchRestrictToken)
-	matchers = append(matchers, l.MatchReturningToken)
-	matchers = append(matchers, l.MatchRightToken)
-	matchers = append(matchers, l.MatchSetToken)
-	matchers = append(matchers, l.MatchSimpleToken)
-	matchers = append(matchers, l.MatchTableToken)
-	matchers = append(matchers, l.MatchTimeToken)
-	matchers = append(matchers, l.MatchUniqueToken)
-	matchers = append(matchers, l.MatchUsingToken)
-	matchers = append(matchers, l.MatchValuesToken)
-	matchers = append(matchers, l.MatchWhereToken)
-	matchers = append(matchers, l.MatchWithToken)
-	matchers = append(matchers, l.MatchZoneToken)
+	matchers = append(matchers, l.matchActionToken)
+	matchers = append(matchers, l.matchAndToken)
+	matchers = append(matchers, l.matchAscToken)
+	matchers = append(matchers, l.matchAsToken)
+	matchers = append(matchers, l.matchAutoincrementToken)
+	matchers = append(matchers, l.matchBtreeToken)
+	matchers = append(matchers, l.matchByToken)
+	matchers = append(matchers, l.matchCascadeToken)
+	matchers = append(matchers, l.matchCharacterToken)
+	matchers = append(matchers, l.matchCharsetToken)
+	matchers = append(matchers, l.matchConstraintToken)
+	matchers = append(matchers, l.matchCountToken)
+	matchers = append(matchers, l.matchDefaultToken)
+	matchers = append(matchers, l.matchDescToken)
+	matchers = append(matchers, l.matchEngineToken)
+	matchers = append(matchers, l.matchExistsToken)
+	matchers = append(matchers, l.matchFalseToken)
+	matchers = append(matchers, l.matchForeignToken)
+	matchers = append(matchers, l.matchForToken)
+	matchers = append(matchers, l.matchFromToken)
+	matchers = append(matchers, l.matchFullToken)
+	matchers = append(matchers, l.matchHashToken)
+	matchers = append(matchers, l.matchIfToken)
+	matchers = append(matchers, l.matchIndexToken)
+	matchers = append(matchers, l.matchInnerToken)
+	matchers = append(matchers, l.matchIntoToken)
+	matchers = append(matchers, l.matchInToken)
+	matchers = append(matchers, l.matchIsToken)
+	matchers = append(matchers, l.matchJoinToken)
+	matchers = append(matchers, l.matchKeyToken)
+	matchers = append(matchers, l.matchLeftToken)
+	matchers = append(matchers, l.matchLimitToken)
+	matchers = append(matchers, l.matchLocalTimestampToken)
+	matchers = append(matchers, l.matchMatchToken)
+	matchers = append(matchers, l.matchNotToken)
+	matchers = append(matchers, l.matchNowToken)
+	matchers = append(matchers, l.matchNoToken)
+	matchers = append(matchers, l.matchNullToken)
+	matchers = append(matchers, l.matchOffsetToken)
+	matchers = append(matchers, l.matchOnToken)
+	matchers = append(matchers, l.matchOrderToken)
+	matchers = append(matchers, l.matchOrToken)
+	matchers = append(matchers, l.matchOuterToken)
+	matchers = append(matchers, l.matchPartialToken)
+	matchers = append(matchers, l.matchPrimaryToken)
+	matchers = append(matchers, l.matchReferencesToken)
+	matchers = append(matchers, l.matchRestrictToken)
+	matchers = append(matchers, l.matchReturningToken)
+	matchers = append(matchers, l.matchRightToken)
+	matchers = append(matchers, l.matchSetToken)
+	matchers = append(matchers, l.matchSimpleToken)
+	matchers = append(matchers, l.matchTableToken)
+	matchers = append(matchers, l.matchTimeToken)
+	matchers = append(matchers, l.matchUniqueToken)
+	matchers = append(matchers, l.matchUsingToken)
+	matchers = append(matchers, l.matchValuesToken)
+	matchers = append(matchers, l.matchWhereToken)
+	matchers = append(matchers, l.matchWithToken)
+	matchers = append(matchers, l.matchZoneToken)
 	// Type Matcher
-	matchers = append(matchers, l.MatchEscapedStringToken)
-	matchers = append(matchers, l.MatchDateToken)
-	matchers = append(matchers, l.MatchNumberToken)
-	matchers = append(matchers, l.MatchStringToken)
+	matchers = append(matchers, l.matchEscapedStringToken)
+	matchers = append(matchers, l.matchDateToken)
+	matchers = append(matchers, l.matchNumberToken)
+	matchers = append(matchers, l.matchStringToken)
 
 	var r bool
 	for l.pos < l.instructionLen {
@@ -315,7 +317,7 @@ func (l *Lexer) Lex(instruction []byte) ([]Token, error) {
 	return l.tokens, nil
 }
 
-func (l *Lexer) MatchSpaceToken() bool {
+func (l *Lexer) matchSpaceToken() bool {
 
 	if unicode.IsSpace(rune(l.instruction[l.pos])) {
 		t := Token{
@@ -330,7 +332,7 @@ func (l *Lexer) MatchSpaceToken() bool {
 	return false
 }
 
-func (l *Lexer) MatchStringToken() bool {
+func (l *Lexer) matchStringToken() bool {
 
 	i := l.pos
 	for i < l.instructionLen &&
@@ -354,7 +356,7 @@ func (l *Lexer) MatchStringToken() bool {
 	return false
 }
 
-func (l *Lexer) MatchNumberToken() bool {
+func (l *Lexer) matchNumberToken() bool {
 
 	i := l.pos
 	for i < l.instructionLen && unicode.IsDigit(rune(l.instruction[i])) {
@@ -374,8 +376,8 @@ func (l *Lexer) MatchNumberToken() bool {
 	return false
 }
 
-// MatchDateToken prefers time.RFC3339Nano but will match a few others as well
-func (l *Lexer) MatchDateToken() bool {
+// matchDateToken prefers time.RFC3339Nano but will match a few others as well
+func (l *Lexer) matchDateToken() bool {
 
 	i := l.pos
 	for i < l.instructionLen &&
@@ -401,7 +403,7 @@ func (l *Lexer) MatchDateToken() bool {
 	return true
 }
 
-func (l *Lexer) MatchDoubleQuoteToken() bool {
+func (l *Lexer) matchDoubleQuoteToken() bool {
 
 	if l.instruction[l.pos] == '"' {
 
@@ -412,7 +414,7 @@ func (l *Lexer) MatchDoubleQuoteToken() bool {
 		l.tokens = append(l.tokens, t)
 		l.pos++
 
-		if l.MatchDoubleQuotedStringToken() {
+		if l.matchDoubleQuotedStringToken() {
 			t := Token{
 				Token:  DoubleQuoteToken,
 				Lexeme: "\"",
@@ -428,7 +430,7 @@ func (l *Lexer) MatchDoubleQuoteToken() bool {
 	return false
 }
 
-func (l *Lexer) MatchEscapedStringToken() bool {
+func (l *Lexer) matchEscapedStringToken() bool {
 	i := l.pos
 	if l.instruction[i] != '$' || l.instruction[i+1] != '$' {
 		return false
@@ -468,7 +470,7 @@ func (l *Lexer) MatchEscapedStringToken() bool {
 	return true
 }
 
-func (l *Lexer) MatchDoubleQuotedStringToken() bool {
+func (l *Lexer) matchDoubleQuotedStringToken() bool {
 	i := l.pos
 	for i < l.instructionLen && l.instruction[i] != '"' {
 		i++
@@ -484,7 +486,7 @@ func (l *Lexer) MatchDoubleQuotedStringToken() bool {
 	return true
 }
 
-func (l *Lexer) MatchSimpleQuoteToken() bool {
+func (l *Lexer) matchSimpleQuoteToken() bool {
 
 	if l.instruction[l.pos] == '\'' {
 
@@ -495,7 +497,7 @@ func (l *Lexer) MatchSimpleQuoteToken() bool {
 		l.tokens = append(l.tokens, t)
 		l.pos++
 
-		if l.MatchSingleQuotedStringToken() {
+		if l.matchSingleQuotedStringToken() {
 			t := Token{
 				Token:  SimpleQuoteToken,
 				Lexeme: "'",
@@ -511,7 +513,7 @@ func (l *Lexer) MatchSimpleQuoteToken() bool {
 	return false
 }
 
-func (l *Lexer) MatchSingleQuotedStringToken() bool {
+func (l *Lexer) matchSingleQuotedStringToken() bool {
 	i := l.pos
 	for i < l.instructionLen && l.instruction[i] != '\'' {
 		i++
@@ -527,7 +529,7 @@ func (l *Lexer) MatchSingleQuotedStringToken() bool {
 	return true
 }
 
-func (l *Lexer) MatchSingle(char byte, token int) bool {
+func (l *Lexer) matchSingle(char byte, token int) bool {
 
 	if l.pos > l.instructionLen {
 		return false
@@ -547,7 +549,7 @@ func (l *Lexer) MatchSingle(char byte, token int) bool {
 	return true
 }
 
-func (l *Lexer) Match(str []byte, token int) bool {
+func (l *Lexer) match(str []byte, token int) bool {
 
 	if l.pos+len(str)-1 > l.instructionLen {
 		return false

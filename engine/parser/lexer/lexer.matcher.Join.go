@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchJoinToken() bool {
-  return l.Match([]byte("join"), JoinToken)
+func (l *Lexer) matchJoinToken() bool {
+  return l.match([]byte("join"), JoinToken)
 }

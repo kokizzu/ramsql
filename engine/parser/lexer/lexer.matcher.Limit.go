@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchLimitToken() bool {
-  return l.Match([]byte("limit"), LimitToken)
+func (l *Lexer) matchLimitToken() bool {
+  return l.match([]byte("limit"), LimitToken)
 }

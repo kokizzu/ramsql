@@ -58,7 +58,7 @@ main() {
 
   echo "package lexer" > ${_output_file}
   echo "" >> ${_output_file}
-  echo "func (l *Lexer) Match${NAME}Token() bool {" >> ${_output_file}
+  echo "func (l *Lexer) match${NAME}Token() bool {" >> ${_output_file}
 
   echo -n "  return" >> ${_output_file}
   for i in $(seq 0 $(( ${#LEXEMES[@]} - 1))); do
@@ -67,9 +67,9 @@ main() {
     fi
 
     if [[ ${#LEXEMES[${i}]} -gt 1 ]]; then
-      echo -n " l.Match([]byte(\"${LEXEMES[${i}]}\"), ${NAME}Token)" >> ${_output_file}
+      echo -n " l.match([]byte(\"${LEXEMES[${i}]}\"), ${NAME}Token)" >> ${_output_file}
     else
-      echo -n " l.MatchSingle('${LEXEMES[${i}]}', ${NAME}Token)" >> ${_output_file}
+      echo -n " l.matchSingle('${LEXEMES[${i}]}', ${NAME}Token)" >> ${_output_file}
     fi
   done
   echo >> ${_output_file}

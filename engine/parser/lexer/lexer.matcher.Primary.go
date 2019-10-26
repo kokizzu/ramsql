@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchPrimaryToken() bool {
-  return l.Match([]byte("primary"), PrimaryToken)
+func (l *Lexer) matchPrimaryToken() bool {
+  return l.match([]byte("primary"), PrimaryToken)
 }

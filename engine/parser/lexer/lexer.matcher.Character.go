@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchCharacterToken() bool {
-  return l.Match([]byte("character"), CharacterToken)
+func (l *Lexer) matchCharacterToken() bool {
+  return l.match([]byte("character"), CharacterToken)
 }

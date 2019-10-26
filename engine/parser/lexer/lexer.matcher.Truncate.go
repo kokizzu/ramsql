@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchTruncateToken() bool {
-  return l.Match([]byte("truncate"), TruncateToken)
+func (l *Lexer) matchTruncateToken() bool {
+  return l.match([]byte("truncate"), TruncateToken)
 }

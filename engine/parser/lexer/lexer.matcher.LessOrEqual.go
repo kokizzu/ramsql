@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchLessOrEqualToken() bool {
-  return l.Match([]byte("<="), LessOrEqualToken)
+func (l *Lexer) matchLessOrEqualToken() bool {
+  return l.match([]byte("<="), LessOrEqualToken)
 }

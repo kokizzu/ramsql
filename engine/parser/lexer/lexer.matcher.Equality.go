@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchEqualityToken() bool {
-  return l.MatchSingle('=', EqualityToken)
+func (l *Lexer) matchEqualityToken() bool {
+  return l.matchSingle('=', EqualityToken)
 }

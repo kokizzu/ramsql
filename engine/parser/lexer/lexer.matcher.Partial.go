@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchPartialToken() bool {
-  return l.Match([]byte("partial"), PartialToken)
+func (l *Lexer) matchPartialToken() bool {
+  return l.match([]byte("partial"), PartialToken)
 }

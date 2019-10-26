@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchBtreeToken() bool {
-  return l.Match([]byte("btree"), BtreeToken)
+func (l *Lexer) matchBtreeToken() bool {
+  return l.match([]byte("btree"), BtreeToken)
 }

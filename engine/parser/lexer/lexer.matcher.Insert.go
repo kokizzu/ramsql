@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchInsertToken() bool {
-  return l.Match([]byte("insert"), InsertToken)
+func (l *Lexer) matchInsertToken() bool {
+  return l.match([]byte("insert"), InsertToken)
 }

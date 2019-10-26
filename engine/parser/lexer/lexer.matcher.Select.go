@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchSelectToken() bool {
-  return l.Match([]byte("select"), SelectToken)
+func (l *Lexer) matchSelectToken() bool {
+  return l.match([]byte("select"), SelectToken)
 }

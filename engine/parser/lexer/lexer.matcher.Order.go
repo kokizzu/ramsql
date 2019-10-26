@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchOrderToken() bool {
-  return l.Match([]byte("order"), OrderToken)
+func (l *Lexer) matchOrderToken() bool {
+  return l.match([]byte("order"), OrderToken)
 }

@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchOuterToken() bool {
-  return l.Match([]byte("outer"), OuterToken)
+func (l *Lexer) matchOuterToken() bool {
+  return l.match([]byte("outer"), OuterToken)
 }

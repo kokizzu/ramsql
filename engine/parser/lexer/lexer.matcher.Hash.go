@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchHashToken() bool {
-  return l.Match([]byte("hash"), HashToken)
+func (l *Lexer) matchHashToken() bool {
+  return l.match([]byte("hash"), HashToken)
 }

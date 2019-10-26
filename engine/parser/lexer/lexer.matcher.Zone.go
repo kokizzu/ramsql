@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchZoneToken() bool {
-  return l.Match([]byte("zone"), ZoneToken)
+func (l *Lexer) matchZoneToken() bool {
+  return l.match([]byte("zone"), ZoneToken)
 }

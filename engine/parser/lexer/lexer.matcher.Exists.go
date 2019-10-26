@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchExistsToken() bool {
-  return l.Match([]byte("exists"), ExistsToken)
+func (l *Lexer) matchExistsToken() bool {
+  return l.match([]byte("exists"), ExistsToken)
 }

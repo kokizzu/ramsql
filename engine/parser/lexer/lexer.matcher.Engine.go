@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchEngineToken() bool {
-  return l.Match([]byte("engine"), EngineToken)
+func (l *Lexer) matchEngineToken() bool {
+  return l.match([]byte("engine"), EngineToken)
 }

@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchConstraintToken() bool {
-  return l.Match([]byte("constraint"), ConstraintToken)
+func (l *Lexer) matchConstraintToken() bool {
+  return l.match([]byte("constraint"), ConstraintToken)
 }

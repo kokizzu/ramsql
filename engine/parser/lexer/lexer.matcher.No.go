@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchNoToken() bool {
-  return l.Match([]byte("no"), NoToken)
+func (l *Lexer) matchNoToken() bool {
+  return l.match([]byte("no"), NoToken)
 }

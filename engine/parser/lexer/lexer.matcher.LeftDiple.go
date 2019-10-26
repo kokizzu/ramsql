@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchLeftDipleToken() bool {
-  return l.MatchSingle('<', LeftDipleToken)
+func (l *Lexer) matchLeftDipleToken() bool {
+  return l.matchSingle('<', LeftDipleToken)
 }

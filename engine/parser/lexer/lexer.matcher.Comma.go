@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchCommaToken() bool {
-  return l.MatchSingle(',', CommaToken)
+func (l *Lexer) matchCommaToken() bool {
+  return l.matchSingle(',', CommaToken)
 }

@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchCharsetToken() bool {
-  return l.Match([]byte("charset"), CharsetToken)
+func (l *Lexer) matchCharsetToken() bool {
+  return l.match([]byte("charset"), CharsetToken)
 }

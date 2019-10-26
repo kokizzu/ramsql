@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchCountToken() bool {
-  return l.Match([]byte("count"), CountToken)
+func (l *Lexer) matchCountToken() bool {
+  return l.match([]byte("count"), CountToken)
 }

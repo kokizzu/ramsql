@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchBracketOpeningToken() bool {
-  return l.MatchSingle('(', BracketOpeningToken)
+func (l *Lexer) matchBracketOpeningToken() bool {
+  return l.matchSingle('(', BracketOpeningToken)
 }

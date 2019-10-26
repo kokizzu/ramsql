@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchBacktickToken() bool {
-  return l.MatchSingle('`', BacktickToken)
+func (l *Lexer) matchBacktickToken() bool {
+  return l.matchSingle('`', BacktickToken)
 }

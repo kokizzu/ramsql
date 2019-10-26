@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchUniqueToken() bool {
-  return l.Match([]byte("unique"), UniqueToken)
+func (l *Lexer) matchUniqueToken() bool {
+  return l.match([]byte("unique"), UniqueToken)
 }

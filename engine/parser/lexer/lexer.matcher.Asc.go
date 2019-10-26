@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchAscToken() bool {
-  return l.Match([]byte("asc"), AscToken)
+func (l *Lexer) matchAscToken() bool {
+  return l.match([]byte("asc"), AscToken)
 }

@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchReturningToken() bool {
-  return l.Match([]byte("returning"), ReturningToken)
+func (l *Lexer) matchReturningToken() bool {
+  return l.match([]byte("returning"), ReturningToken)
 }

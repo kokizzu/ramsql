@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchTimeToken() bool {
-  return l.Match([]byte("time"), TimeToken)
+func (l *Lexer) matchTimeToken() bool {
+  return l.match([]byte("time"), TimeToken)
 }

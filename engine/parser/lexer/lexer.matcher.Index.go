@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchIndexToken() bool {
-  return l.Match([]byte("index"), IndexToken)
+func (l *Lexer) matchIndexToken() bool {
+  return l.match([]byte("index"), IndexToken)
 }

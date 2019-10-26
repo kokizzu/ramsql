@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchDropToken() bool {
-  return l.Match([]byte("drop"), DropToken)
+func (l *Lexer) matchDropToken() bool {
+  return l.match([]byte("drop"), DropToken)
 }

@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchDeleteToken() bool {
-  return l.Match([]byte("delete"), DeleteToken)
+func (l *Lexer) matchDeleteToken() bool {
+  return l.match([]byte("delete"), DeleteToken)
 }

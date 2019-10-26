@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchNowToken() bool {
-  return l.Match([]byte("now()"), NowToken)
+func (l *Lexer) matchNowToken() bool {
+  return l.match([]byte("now()"), NowToken)
 }

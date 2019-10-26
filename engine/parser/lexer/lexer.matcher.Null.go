@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchNullToken() bool {
-  return l.Match([]byte("null"), NullToken)
+func (l *Lexer) matchNullToken() bool {
+  return l.match([]byte("null"), NullToken)
 }

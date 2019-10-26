@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchKeyToken() bool {
-  return l.Match([]byte("key"), KeyToken)
+func (l *Lexer) matchKeyToken() bool {
+  return l.match([]byte("key"), KeyToken)
 }

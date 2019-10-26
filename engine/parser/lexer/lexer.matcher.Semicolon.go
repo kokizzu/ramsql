@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchSemicolonToken() bool {
-  return l.MatchSingle(';', SemicolonToken)
+func (l *Lexer) matchSemicolonToken() bool {
+  return l.matchSingle(';', SemicolonToken)
 }

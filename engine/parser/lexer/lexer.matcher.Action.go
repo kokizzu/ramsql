@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchActionToken() bool {
-  return l.Match([]byte("action"), ActionToken)
+func (l *Lexer) matchActionToken() bool {
+  return l.match([]byte("action"), ActionToken)
 }

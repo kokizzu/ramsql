@@ -1,5 +1,5 @@
 package lexer
 
-func (l *Lexer) MatchCascadeToken() bool {
-  return l.Match([]byte("cascade"), CascadeToken)
+func (l *Lexer) matchCascadeToken() bool {
+  return l.match([]byte("cascade"), CascadeToken)
 }
