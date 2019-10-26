@@ -4,7 +4,7 @@ import (
 	"github.com/mlhoyt/ramsql/engine/parser/lexer"
 )
 
-func (p *parser) parseTruncate() (*Instruction, error) {
+func (p *Parser) parseTruncate() (*Instruction, error) {
 	i := &Instruction{}
 
 	// Set TRUNCATE decl

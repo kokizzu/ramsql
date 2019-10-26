@@ -428,7 +428,7 @@ func parse(query string, instructionCount int, t *testing.T) []Instruction {
 	}
 
 	parser := NewParser(tokens)
-	instructions, err := parser.parse()
+	instructions, err := parser.Parse()
 	if err != nil {
 		t.Fatalf("Cannot parse tokens from '%s': %s", query, err)
 	}

@@ -7,7 +7,7 @@ import (
 	"github.com/mlhoyt/ramsql/engine/parser/lexer"
 )
 
-func (p *parser) parseCreate() (*Instruction, error) {
+func (p *Parser) parseCreate() (*Instruction, error) {
 	i := &Instruction{}
 
 	// Set CREATE decl
@@ -38,7 +38,7 @@ func (p *parser) parseCreate() (*Instruction, error) {
 	return i, nil
 }
 
-func (p *parser) parseTable() (*Decl, error) {
+func (p *Parser) parseTable() (*Decl, error) {
 	var err error
 	tableDecl := NewDecl(p.cur())
 	p.index++
@@ -404,7 +404,7 @@ tableOptions:
 
 // parseTableConstraint processes tokens that should define a table constraint
 // CONSTRAINT <CONSTRAINT-NAME>? ...
-func (p *parser) parseTableConstraint() (*Decl, error) {
+func (p *Parser) parseTableConstraint() (*Decl, error) {
 	constraintDecl, err := p.consumeToken(lexer.ConstraintToken)
 	if err != nil {
 		return nil, err
@@ -447,7 +447,7 @@ func (p *parser) parseTableConstraint() (*Decl, error) {
 	return constraintDecl, nil
 }
 
-func (p *parser) parsePrimaryKey() (*Decl, error) {
+func (p *Parser) parsePrimaryKey() (*Decl, error) {
 	primaryDecl, err := p.consumeToken(lexer.PrimaryToken)
 	if err != nil {
 		return nil, err
@@ -484,7 +484,7 @@ func (p *parser) parsePrimaryKey() (*Decl, error) {
 
 // parseTableIndex processes tokens that should define a table index
 // { INDEX | KEY } [ index_name ] [?:index_type USING { BTREE | HASH } ] '(' { col_name [ '(' length ')' ] | '(' expr ')' } [ ASC | DESC ] ',' ... ')' [?:index_option ... ]
-func (p *parser) parseTableIndex() (*Decl, error) {
+func (p *Parser) parseTableIndex() (*Decl, error) {
 	indexDecl := NewDecl(lexer.Token{Token: lexer.IndexToken, Lexeme: "index"})
 
 	// Required: { INDEX | KEY }
@@ -555,7 +555,7 @@ func (p *parser) parseTableIndex() (*Decl, error) {
 
 // parseTableForeignKey processes tokens that should define a table foreign key
 // FOREIGN KEY ...
-func (p *parser) parseTableForeignKey() (*Decl, error) {
+func (p *Parser) parseTableForeignKey() (*Decl, error) {
 	// Required: FOREIGN
 	foreignDecl, err := p.consumeToken(lexer.ForeignToken)
 	if err != nil {
@@ -612,7 +612,7 @@ func (p *parser) parseTableForeignKey() (*Decl, error) {
 
 // parseTableReference processes tokens that should define a table reference
 // REFERENCES ...
-func (p *parser) parseTableReference() (*Decl, error) {
+func (p *Parser) parseTableReference() (*Decl, error) {
 	// Required: REFERENCES
 	referencesDecl, err := p.consumeToken(lexer.ReferencesToken)
 	if err != nil {
@@ -714,7 +714,7 @@ func (p *parser) parseTableReference() (*Decl, error) {
 }
 
 // parseTableReferenceOption processes tokens that should define a table reference option
-func (p *parser) parseTableReferenceOption() (*Decl, error) {
+func (p *Parser) parseTableReferenceOption() (*Decl, error) {
 	switch p.cur().Token {
 	case lexer.RestrictToken:
 		d, err := p.consumeToken(lexer.RestrictToken)

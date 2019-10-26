@@ -4,7 +4,7 @@ import (
 	"github.com/mlhoyt/ramsql/engine/parser/lexer"
 )
 
-func (p *parser) parseDelete() (*Instruction, error) {
+func (p *Parser) parseDelete() (*Instruction, error) {
 	i := &Instruction{}
 
 	// Set DELETE decl

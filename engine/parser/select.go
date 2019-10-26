@@ -5,7 +5,7 @@ import (
 	"github.com/mlhoyt/ramsql/engine/parser/lexer"
 )
 
-func (p *parser) parseSelect() (*Instruction, error) {
+func (p *Parser) parseSelect() (*Instruction, error) {
 	i := &Instruction{}
 	var err error
 
@@ -184,7 +184,7 @@ func addImplicitWhereAll(decl *Decl) {
 	decl.Add(whereDecl)
 }
 
-func (p *parser) parseForUpdate(decl *Decl) error {
+func (p *Parser) parseForUpdate(decl *Decl) error {
 	// Optionnal
 	if !p.is(lexer.ForToken) {
 		return nil

@@ -5,7 +5,7 @@ import (
 	"github.com/mlhoyt/ramsql/engine/parser/lexer"
 )
 
-func (p *parser) parseDrop() (*Instruction, error) {
+func (p *Parser) parseDrop() (*Instruction, error) {
 	i := &Instruction{}
 
 	// Required: DROP

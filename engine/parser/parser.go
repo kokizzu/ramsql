@@ -10,8 +10,8 @@ import (
 	"github.com/mlhoyt/ramsql/engine/parser/lexer"
 )
 
-// The parser structure holds the parser's internal state.
-type parser struct {
+// Parser holds the parser's internal state
+type Parser struct {
 	tokens   []lexer.Token
 	tokenLen int
 	index    int
@@ -20,8 +20,8 @@ type parser struct {
 }
 
 // NewParser returns a parser object initialized with a list of tokens
-func NewParser(tokens []lexer.Token) parser {
-	p := parser{
+func NewParser(tokens []lexer.Token) Parser {
+	p := Parser{
 		tokens: stripSpaces(tokens),
 		index:  0,
 		i:      []Instruction{},
@@ -32,7 +32,8 @@ func NewParser(tokens []lexer.Token) parser {
 	return p
 }
 
-func (p *parser) parse() ([]Instruction, error) {
+// Parse traverses its slice of tokens and returns a slice of instructions
+func (p *Parser) Parse() ([]Instruction, error) {
 	for p.hasNext() {
 		// fmt.Printf("Token index : %d\n", p.index)
 
@@ -118,7 +119,7 @@ func (p *parser) parse() ([]Instruction, error) {
 	return p.i, nil
 }
 
-func (p *parser) parseUpdate() (*Instruction, error) {
+func (p *Parser) parseUpdate() (*Instruction, error) {
 	i := &Instruction{}
 
 	// Set DELETE decl
@@ -169,7 +170,7 @@ func (p *parser) parseUpdate() (*Instruction, error) {
 	return i, nil
 }
 
-func (p *parser) parseInsert() (*Instruction, error) {
+func (p *Parser) parseInsert() (*Instruction, error) {
 	i := &Instruction{}
 
 	// Required: INSERT
@@ -266,7 +267,7 @@ func (p *parser) parseInsert() (*Instruction, error) {
 	return i, nil
 }
 
-func (p *parser) parseType() (*Decl, error) {
+func (p *Parser) parseType() (*Decl, error) {
 	typeDecl, err := p.consumeToken(lexer.StringToken)
 	if err != nil {
 		return nil, err
@@ -292,7 +293,7 @@ func (p *parser) parseType() (*Decl, error) {
 	return typeDecl, nil
 }
 
-func (p *parser) parseOrderBy(selectDecl *Decl) error {
+func (p *Parser) parseOrderBy(selectDecl *Decl) error {
 	orderDecl, err := p.consumeToken(lexer.OrderToken)
 	if err != nil {
 		return err
@@ -339,7 +340,7 @@ func (p *parser) parseOrderBy(selectDecl *Decl) error {
 	return nil
 }
 
-func (p *parser) parseWhere(selectDecl *Decl) error {
+func (p *Parser) parseWhere(selectDecl *Decl) error {
 
 	// May be WHERE  here
 	// Can be ORDER BY if WHERE cause if implicit
@@ -382,7 +383,7 @@ func (p *parser) parseWhere(selectDecl *Decl) error {
 }
 
 // parseBuiltinFunc looks for COUNT,MAX,MIN
-func (p *parser) parseBuiltinFunc() (*Decl, error) {
+func (p *Parser) parseBuiltinFunc() (*Decl, error) {
 	var d *Decl
 	var err error
 
@@ -418,7 +419,7 @@ func (p *parser) parseBuiltinFunc() (*Decl, error) {
 // table.*
 // "table".foo
 // foo
-func (p *parser) parseAttribute() (*Decl, error) {
+func (p *Parser) parseAttribute() (*Decl, error) {
 	quoted := false
 	quoteDelimiter := lexer.DoubleQuoteToken
 
@@ -487,7 +488,7 @@ func (p *parser) parseAttribute() (*Decl, error) {
 }
 
 // lexer.parseQuotedToken parse a token of the form <STRING>, '<STRING>', "<STRING>", `<STRING>`
-func (p *parser) parseQuotedToken() (*Decl, error) {
+func (p *Parser) parseQuotedToken() (*Decl, error) {
 	quoted := false
 	quoteDelimiter := lexer.DoubleQuoteToken
 
@@ -519,7 +520,7 @@ func (p *parser) parseQuotedToken() (*Decl, error) {
 	return decl, nil
 }
 
-func (p *parser) parseCondition() (*Decl, error) {
+func (p *Parser) parseCondition() (*Decl, error) {
 
 	// We may have the WHERE 1 condition
 	if t := p.cur(); t.Token == lexer.NumberToken && t.Lexeme == "1" {
@@ -592,7 +593,7 @@ func (p *parser) parseCondition() (*Decl, error) {
 	return attributeDecl, nil
 }
 
-func (p *parser) parseIn() (*Decl, error) {
+func (p *Parser) parseIn() (*Decl, error) {
 	inDecl, err := p.consumeToken(lexer.InToken)
 	if err != nil {
 		return nil, err
@@ -631,7 +632,7 @@ func (p *parser) parseIn() (*Decl, error) {
 	return inDecl, nil
 }
 
-func (p *parser) parseValue() (*Decl, error) {
+func (p *Parser) parseValue() (*Decl, error) {
 	debug("parseValue")
 	defer debug("~parseValue")
 	quoted := false
@@ -666,7 +667,7 @@ func (p *parser) parseValue() (*Decl, error) {
 
 // parseJoin parses the JOIN keywords and all its condition
 // JOIN user_addresses ON address.id=user_addresses.address_id
-func (p *parser) parseJoin() (*Decl, error) {
+func (p *Parser) parseJoin() (*Decl, error) {
 	joinDecl, err := p.consumeToken(lexer.JoinToken)
 	if err != nil {
 		return nil, err
@@ -711,7 +712,7 @@ func (p *parser) parseJoin() (*Decl, error) {
 	return joinDecl, nil
 }
 
-func (p *parser) parseListElement() (*Decl, error) {
+func (p *Parser) parseListElement() (*Decl, error) {
 	quoted := false
 
 	// In case of INSERT, can be DEFAULT here
@@ -743,14 +744,14 @@ func (p *parser) parseListElement() (*Decl, error) {
 	return valueDecl, nil
 }
 
-func (p *parser) hasNext() bool {
+func (p *Parser) hasNext() bool {
 	if p.index+1 < p.tokenLen {
 		return true
 	}
 	return false
 }
 
-func (p *parser) next() error {
+func (p *Parser) next() error {
 	if !p.hasNext() {
 		return fmt.Errorf("Unexpected end of tokens")
 	}
@@ -759,19 +760,19 @@ func (p *parser) next() error {
 	return nil
 }
 
-func (p *parser) peekBackward() lexer.Token {
+func (p *Parser) peekBackward() lexer.Token {
 	return p.tokens[p.index-1]
 }
 
-func (p *parser) cur() lexer.Token {
+func (p *Parser) cur() lexer.Token {
 	return p.tokens[p.index]
 }
 
-func (p *parser) peekForward() lexer.Token {
+func (p *Parser) peekForward() lexer.Token {
 	return p.tokens[p.index+1]
 }
 
-func (p *parser) is(tokenTypes ...int) bool {
+func (p *Parser) is(tokenTypes ...int) bool {
 
 	for _, tokenType := range tokenTypes {
 		if p.cur().Token == tokenType {
@@ -782,11 +783,11 @@ func (p *parser) is(tokenTypes ...int) bool {
 	return false
 }
 
-func (p *parser) isNot(tokenTypes ...int) bool {
+func (p *Parser) isNot(tokenTypes ...int) bool {
 	return !p.is(tokenTypes...)
 }
 
-func (p *parser) isNext(tokenTypes ...int) (t lexer.Token, err error) {
+func (p *Parser) isNext(tokenTypes ...int) (t lexer.Token, err error) {
 
 	if !p.hasNext() {
 		debug("parser.isNext: has no next")
@@ -804,7 +805,7 @@ func (p *parser) isNext(tokenTypes ...int) (t lexer.Token, err error) {
 	return t, p.syntaxError()
 }
 
-func (p *parser) mustHaveNext(tokenTypes ...int) (t lexer.Token, err error) {
+func (p *Parser) mustHaveNext(tokenTypes ...int) (t lexer.Token, err error) {
 
 	if !p.hasNext() {
 		debug("parser.mustHaveNext: has no next")
@@ -827,7 +828,7 @@ func (p *parser) mustHaveNext(tokenTypes ...int) (t lexer.Token, err error) {
 	return t, p.syntaxError()
 }
 
-func (p *parser) consumeToken(tokenTypes ...int) (*Decl, error) {
+func (p *Parser) consumeToken(tokenTypes ...int) (*Decl, error) {
 
 	if !p.is(tokenTypes...) {
 		return nil, p.syntaxError()
@@ -838,7 +839,7 @@ func (p *parser) consumeToken(tokenTypes ...int) (*Decl, error) {
 	return decl, nil
 }
 
-func (p *parser) syntaxError() error {
+func (p *Parser) syntaxError() error {
 	if p.index == 0 {
 		return fmt.Errorf("Syntax error near %v %v", p.cur().Lexeme, p.peekForward().Lexeme)
 	} else if !p.hasNext() {

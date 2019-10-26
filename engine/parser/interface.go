@@ -16,7 +16,7 @@ func ParseInstruction(instruction string) ([]Instruction, error) {
 	}
 
 	p := NewParser(tokens)
-	instructions, err := p.parse()
+	instructions, err := p.Parse()
 	if err != nil {
 		return nil, err
 	}
