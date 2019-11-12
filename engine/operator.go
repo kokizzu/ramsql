@@ -29,21 +29,20 @@ func NewOperator(token int, lexeme string) (Operator, error) {
 	return nil, fmt.Errorf("Operator '%s' does not exist", lexeme)
 }
 
-func convToDate(t interface{}) (time.Time, error) {
+func convToDate(t interface{}) (*time.Time, error) {
 
 	switch t := t.(type) {
 	default:
 		log.Debug("convToDate> unexpected type %T\n", t)
-		return time.Time{}, fmt.Errorf("unexpected internal type %T", t)
+		return &time.Time{}, fmt.Errorf("unexpected internal type %T", t)
 	case string:
-		d, err :=parser.ParseDate(string(t))
+		d, err := parser.ParseDate(string(t))
 		if err != nil {
-			return time.Time{}, fmt.Errorf("cannot parse date %v", t)
+			return &time.Time{}, fmt.Errorf("cannot parse date %v", t)
 		}
 
-		return *d, nil
+		return d, nil
 	}
-
 }
 
 func convToFloat(t interface{}) (float64, error) {
@@ -66,7 +65,11 @@ func convToFloat(t interface{}) (float64, error) {
 
 func greaterThanOperator(leftValue Value, rightValue Value) bool {
 	log.Debug("GreaterThanOperator")
-	var left, right float64
+	var left float64
+	var right float64
+	var leftDate *time.Time
+	var rightDate *time.Time
+	var leftIsDate bool
 	var err error
 
 	var rvalue interface{}
@@ -76,9 +79,6 @@ func greaterThanOperator(leftValue Value, rightValue Value) bool {
 		rvalue = rightValue.lexeme
 	}
 
-	var leftDate time.Time
-	var isDate bool
-
 	left, err = convToFloat(leftValue.v)
 	if err != nil {
 		leftDate, err = convToDate(leftValue.v)
@@ -86,10 +86,13 @@ func greaterThanOperator(leftValue Value, rightValue Value) bool {
 			log.Debug("GreaterThanOperator> %s\n", err)
 			return false
 		}
-		isDate = true
+		if leftDate == nil {
+			return false
+		}
+		leftIsDate = true
 	}
 
-	if !isDate {
+	if !leftIsDate {
 		right, err = convToFloat(rvalue)
 		if err != nil {
 			log.Debug("GreaterThanOperator> %s\n", err)
@@ -99,13 +102,16 @@ func greaterThanOperator(leftValue Value, rightValue Value) bool {
 		return left > right
 	}
 
-	rightDate, err := convToDate(rvalue)
+	rightDate, err = convToDate(rvalue)
 	if err != nil {
 		log.Debug("GreaterThanOperator> %s\n", err)
 		return false
 	}
+	if rightDate == nil {
+		return false
+	}
 
-	return leftDate.After(rightDate)
+	return leftDate.After(*rightDate)
 }
 
 func lessOrEqualOperator(leftValue Value, rightValue Value) bool {
@@ -118,7 +124,11 @@ func greaterOrEqualOperator(leftValue Value, rightValue Value) bool {
 
 func lessThanOperator(leftValue Value, rightValue Value) bool {
 	log.Debug("LessThanOperator")
-	var left, right float64
+	var left float64
+	var right float64
+	var leftDate *time.Time
+	var rightDate *time.Time
+	var leftIsDate bool
 	var err error
 
 	var rvalue interface{}
@@ -128,9 +138,6 @@ func lessThanOperator(leftValue Value, rightValue Value) bool {
 		rvalue = rightValue.lexeme
 	}
 
-	var leftDate time.Time
-	var isDate bool
-
 	left, err = convToFloat(leftValue.v)
 	if err != nil {
 		leftDate, err = convToDate(leftValue.v)
@@ -138,10 +145,13 @@ func lessThanOperator(leftValue Value, rightValue Value) bool {
 			log.Debug("LessThanOperator> %s\n", err)
 			return false
 		}
-		isDate = true
+		if leftDate == nil {
+			return false
+		}
+		leftIsDate = true
 	}
 
-	if !isDate {
+	if !leftIsDate {
 		right, err = convToFloat(rvalue)
 		if err != nil {
 			log.Debug("LessThanOperator> %s\n", err)
@@ -151,13 +161,16 @@ func lessThanOperator(leftValue Value, rightValue Value) bool {
 		return left < right
 	}
 
-	rightDate, err := convToDate(rvalue)
+	rightDate, err = convToDate(rvalue)
 	if err != nil {
 		log.Debug("LessThanOperator> %s\n", err)
 		return false
 	}
+	if rightDate == nil {
+		return false
+	}
 
-	return leftDate.Before(rightDate)
+	return leftDate.Before(*rightDate)
 }
 
 // EqualityOperator checks if given value are equal

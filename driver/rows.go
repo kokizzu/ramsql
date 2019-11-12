@@ -23,7 +23,7 @@ func newRows(channel chan []string) *Rows {
 	r := &Rows{rowsChannel: channel}
 	c, ok := <-channel
 	if !ok {
-		log.Critical("Cannot receive column names form channel")
+		log.Critical("Cannot receive column names from channel")
 		return nil
 	}
 
@@ -53,7 +53,7 @@ func (r *Rows) Close() error {
 		return nil
 	}
 
-	// Tels UnlimitedRowsChannel to close itself
+	// Tells UnlimitedRowsChannel to close itself
 	//r.rowsChannel <- []string{}
 	r.rowsChannel = nil
 	return nil
@@ -87,17 +87,19 @@ func (r *Rows) Next(dest []driver.Value) (err error) {
 	}
 
 	for i, v := range value {
-		if v == "<nil>" {
+		if v == "<nil>" || v == "null" {
 			dest[i] = nil
 			continue
 		}
 
 		// TODO: make rowsChannel send virtualRows,
 		// so we have the type and don't blindy try to parse date here
+		dest[i] = nil
 		if t, err := parser.ParseDate(string(v)); err == nil {
-			dest[i] = *t
+			if t != nil {
+				dest[i] = *t
+			}
 		} else {
-
 			dest[i] = []byte(v)
 		}
 	}

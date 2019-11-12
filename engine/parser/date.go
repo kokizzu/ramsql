@@ -41,5 +41,9 @@ func ParseDate(data string) (*time.Time, error) {
 		return &t, nil
 	}
 
+	if data == "null" || data == "NULL" {
+		return nil, nil
+	}
+
 	return nil, fmt.Errorf("not a date")
 }
