@@ -120,7 +120,7 @@ func (p *parser) parse() ([]Instruction, error) {
 func (p *parser) parseUpdate() (*Instruction, error) {
 	i := &Instruction{}
 
-	// Set DELETE decl
+	// Set UPDATE decl
 	updateDecl, err := p.consumeToken(UpdateToken)
 	if err != nil {
 		return nil, err
@@ -644,7 +644,7 @@ func (p *parser) parseValue() (*Decl, error) {
 		}
 	}
 
-	valueDecl, err := p.consumeToken(StringToken, NumberToken, DateToken, NowToken, LocalTimestampToken)
+	valueDecl, err := p.consumeToken(StringToken, NumberToken, DateToken, NowToken, LocalTimestampToken, NullToken)
 	if err != nil {
 		debug("parseValue: Wasn't expecting %v\n", p.cur())
 		return nil, err
