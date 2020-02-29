@@ -7,6 +7,10 @@ require (
 	github.com/mattn/go-sqlite3 v1.11.0 // indirect
 	github.com/onsi/ginkgo v1.10.1 // indirect
 	github.com/onsi/gomega v1.7.0 // indirect
+	github.com/sirupsen/logrus v1.4.2
+	github.com/spf13/pflag v1.0.5
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	google.golang.org/appengine v1.6.4 // indirect
 )
+
+go 1.13

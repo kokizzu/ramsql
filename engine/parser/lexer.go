@@ -109,85 +109,86 @@ const (
 // Matcher tries to match given string to an SQL token
 type Matcher func() bool
 
-//go:generate ./lexer-generate-matcher.sh --lexeme "(" --name BracketOpening
-//go:generate ./lexer-generate-matcher.sh --lexeme ")" --name BracketClosing
-//go:generate ./lexer-generate-matcher.sh --lexeme "*" --name Star
-//go:generate ./lexer-generate-matcher.sh --lexeme "," --name Comma
-//go:generate ./lexer-generate-matcher.sh --lexeme "." --name Period
-//go:generate ./lexer-generate-matcher.sh --lexeme ";" --name Semicolon
-//go:generate ./lexer-generate-matcher.sh --lexeme "<" --name LeftDiple
-//go:generate ./lexer-generate-matcher.sh --lexeme "<=" --name LessOrEqual
-//go:generate ./lexer-generate-matcher.sh --lexeme "=" --name Equality
-//go:generate ./lexer-generate-matcher.sh --lexeme ">" --name RightDiple
-//go:generate ./lexer-generate-matcher.sh --lexeme ">=" --name GreaterOrEqual
-//go:generate ./lexer-generate-matcher.sh --lexeme "`" --name Backtick
-//go:generate ./lexer-generate-matcher.sh --lexeme "action"
-//go:generate ./lexer-generate-matcher.sh --lexeme "and"
-//go:generate ./lexer-generate-matcher.sh --lexeme "as"
-//go:generate ./lexer-generate-matcher.sh --lexeme "asc"
-//go:generate ./lexer-generate-matcher.sh --lexeme "autoincrement" --lexeme "auto_increment"
-//go:generate ./lexer-generate-matcher.sh --lexeme "btree"
-//go:generate ./lexer-generate-matcher.sh --lexeme "by"
-//go:generate ./lexer-generate-matcher.sh --lexeme "cascade"
-//go:generate ./lexer-generate-matcher.sh --lexeme "character"
-//go:generate ./lexer-generate-matcher.sh --lexeme "charset"
-//go:generate ./lexer-generate-matcher.sh --lexeme "constraint"
-//go:generate ./lexer-generate-matcher.sh --lexeme "count"
-//go:generate ./lexer-generate-matcher.sh --lexeme "create"
-//go:generate ./lexer-generate-matcher.sh --lexeme "default"
-//go:generate ./lexer-generate-matcher.sh --lexeme "delete"
-//go:generate ./lexer-generate-matcher.sh --lexeme "desc"
-//go:generate ./lexer-generate-matcher.sh --lexeme "drop"
-//go:generate ./lexer-generate-matcher.sh --lexeme "engine"
-//go:generate ./lexer-generate-matcher.sh --lexeme "exists"
-//go:generate ./lexer-generate-matcher.sh --lexeme "false"
-//go:generate ./lexer-generate-matcher.sh --lexeme "for"
-//go:generate ./lexer-generate-matcher.sh --lexeme "foreign"
-//go:generate ./lexer-generate-matcher.sh --lexeme "from"
-//go:generate ./lexer-generate-matcher.sh --lexeme "full"
-//go:generate ./lexer-generate-matcher.sh --lexeme "grant"
-//go:generate ./lexer-generate-matcher.sh --lexeme "hash"
-//go:generate ./lexer-generate-matcher.sh --lexeme "if"
-//go:generate ./lexer-generate-matcher.sh --lexeme "in"
-//go:generate ./lexer-generate-matcher.sh --lexeme "index"
-//go:generate ./lexer-generate-matcher.sh --lexeme "inner"
-//go:generate ./lexer-generate-matcher.sh --lexeme "insert"
-//go:generate ./lexer-generate-matcher.sh --lexeme "into"
-//go:generate ./lexer-generate-matcher.sh --lexeme "is"
-//go:generate ./lexer-generate-matcher.sh --lexeme "join"
-//go:generate ./lexer-generate-matcher.sh --lexeme "key"
-//go:generate ./lexer-generate-matcher.sh --lexeme "left"
-//go:generate ./lexer-generate-matcher.sh --lexeme "limit"
-//go:generate ./lexer-generate-matcher.sh --lexeme "localtimestamp" --lexeme "current_timestamp" --name LocalTimestamp
-//go:generate ./lexer-generate-matcher.sh --lexeme "match"
-//go:generate ./lexer-generate-matcher.sh --lexeme "no"
-//go:generate ./lexer-generate-matcher.sh --lexeme "not"
-//go:generate ./lexer-generate-matcher.sh --lexeme "now()" --name Now
-//go:generate ./lexer-generate-matcher.sh --lexeme "null"
-//go:generate ./lexer-generate-matcher.sh --lexeme "offset"
-//go:generate ./lexer-generate-matcher.sh --lexeme "on"
-//go:generate ./lexer-generate-matcher.sh --lexeme "or"
-//go:generate ./lexer-generate-matcher.sh --lexeme "order"
-//go:generate ./lexer-generate-matcher.sh --lexeme "outer"
-//go:generate ./lexer-generate-matcher.sh --lexeme "partial"
-//go:generate ./lexer-generate-matcher.sh --lexeme "primary"
-//go:generate ./lexer-generate-matcher.sh --lexeme "references"
-//go:generate ./lexer-generate-matcher.sh --lexeme "restrict"
-//go:generate ./lexer-generate-matcher.sh --lexeme "returning"
-//go:generate ./lexer-generate-matcher.sh --lexeme "right"
-//go:generate ./lexer-generate-matcher.sh --lexeme "select"
-//go:generate ./lexer-generate-matcher.sh --lexeme "set"
-//go:generate ./lexer-generate-matcher.sh --lexeme "simple"
-//go:generate ./lexer-generate-matcher.sh --lexeme "table"
-//go:generate ./lexer-generate-matcher.sh --lexeme "time"
-//go:generate ./lexer-generate-matcher.sh --lexeme "truncate"
-//go:generate ./lexer-generate-matcher.sh --lexeme "unique"
-//go:generate ./lexer-generate-matcher.sh --lexeme "update"
-//go:generate ./lexer-generate-matcher.sh --lexeme "using"
-//go:generate ./lexer-generate-matcher.sh --lexeme "values"
-//go:generate ./lexer-generate-matcher.sh --lexeme "where"
-//go:generate ./lexer-generate-matcher.sh --lexeme "with"
-//go:generate ./lexer-generate-matcher.sh --lexeme "zone"
+//go:generate go run ../../utils/lexer-generate-matcher.go --init
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "action"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "and"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "as"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "asc"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "autoincrement" --lexeme "auto_increment"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "`" --name Backtick
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme ")" --name BracketClosing
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "(" --name BracketOpening
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "btree"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "by"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "cascade"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "character"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "charset"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "," --name Comma
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "constraint"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "count"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "create"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "default"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "delete"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "desc"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "drop"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "engine"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "=" --name Equality
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "exists"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "false"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "for"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "foreign"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "from"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "full"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "grant"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme ">=" --name GreaterOrEqual
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "hash"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "if"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "in"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "index"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "inner"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "insert"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "into"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "is"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "join"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "key"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "left"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "<" --name LeftDiple
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "<=" --name LessOrEqual
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "limit"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "localtimestamp" --lexeme "current_timestamp" --name LocalTimestamp
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "match"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "no"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "not"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "now()" --name Now
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "null"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "offset"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "on"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "or"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "order"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "outer"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "partial"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "." --name Period
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "primary"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "references"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "restrict"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "returning"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "right"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme ">" --name RightDiple
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "select"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme ";" --name Semicolon
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "set"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "simple"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "*" --name Star
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "table"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "time"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "truncate"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "unique"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "update"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "using"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "values"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "where"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "with"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "zone"
 
 func (l *lexer) lex(instruction []byte) ([]Token, error) {
 	l.instructionLen = len(instruction)

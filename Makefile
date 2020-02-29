@@ -7,16 +7,19 @@ check: lint vet test
 generate:
 	go generate ./...
 
-lint: generate
+lint:
 	golint ./...
 
-vet: generate
+vet:
 	go vet ./...
 
-test: generate
+test:
 	go test -vet=off -coverprofile=coverage.out ./...
 
 test-coverage:
 	@go tool cover -func=coverage.out \
 		| perl -p -e 's/([^\s])\s+([^\s])/$$1 $$2/g' \
 		| column -t
+
+build:
+	go build -v -o ramsql main.go
