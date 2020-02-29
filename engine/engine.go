@@ -37,17 +37,17 @@ func New(endpoint protocol.EngineEndpoint) (e *Engine, err error) {
 
 	e.opsExecutors = map[int]executor{
 		parser.CreateToken:   createExecutor,
-		parser.TableToken:    createTableExecutor,
-		parser.SelectToken:   selectExecutor,
-		parser.InsertToken:   insertIntoTableExecutor,
 		parser.DeleteToken:   deleteExecutor,
-		parser.UpdateToken:   updateExecutor,
-		parser.IfToken:       ifExecutor,
-		parser.NotToken:      notExecutor,
-		parser.ExistsToken:   existsExecutor,
-		parser.TruncateToken: truncateExecutor,
 		parser.DropToken:     dropExecutor,
+		parser.ExistsToken:   existsExecutor,
 		parser.GrantToken:    grantExecutor,
+		parser.IfToken:       ifExecutor,
+		parser.InsertToken:   insertIntoTableExecutor,
+		parser.NotToken:      notExecutor,
+		parser.SelectToken:   selectExecutor,
+		parser.TableToken:    createTableExecutor,
+		parser.TruncateToken: truncateExecutor,
+		parser.UpdateToken:   updateExecutor,
 	}
 
 	e.relations = make(map[string]*Relation)
@@ -173,21 +173,4 @@ func (e *Engine) executeQuery(i parser.Instruction, conn protocol.EngineConn) er
 	}
 
 	return errors.New("Not Implemented")
-}
-
-func createExecutor(e *Engine, createDecl *parser.Decl, conn protocol.EngineConn) error {
-
-	if len(createDecl.Decl) == 0 {
-		return errors.New("Parsing failed, no declaration after CREATE")
-	}
-
-	if e.opsExecutors[createDecl.Decl[0].Token] != nil {
-		return e.opsExecutors[createDecl.Decl[0].Token](e, createDecl.Decl[0], conn)
-	}
-
-	return errors.New("Parsing failed, unkown token " + createDecl.Decl[0].Lexeme)
-}
-
-func grantExecutor(e *Engine, decl *parser.Decl, conn protocol.EngineConn) error {
-	return conn.WriteResult(0, 0)
 }

@@ -19,11 +19,3 @@ func ifExecutor(e *Engine, ifDecl *parser.Decl, conn protocol.EngineConn) error 
 
 	return fmt.Errorf("error near %v, unknown keyword", ifDecl.Decl[0].Lexeme)
 }
-
-func notExecutor(e *Engine, tableDecl *parser.Decl, conn protocol.EngineConn) error {
-	return nil
-}
-
-func existsExecutor(e *Engine, tableDecl *parser.Decl, conn protocol.EngineConn) error {
-	return nil
-}

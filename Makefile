@@ -1,7 +1,5 @@
 # -*- makefile -*-
 
-export GO111MODULE=on
-
 check: lint vet test
 
 generate:
@@ -17,9 +15,8 @@ test:
 	go test -vet=off -coverprofile=coverage.out ./...
 
 test-coverage:
-	@go tool cover -func=coverage.out \
-		| perl -p -e 's/([^\s])\s+([^\s])/$$1 $$2/g' \
-		| column -t
+	echo "Coverage Analysis:"
+	go tool cover -func=coverage.out | perl -p -e '$$_=join(",",split())."\n"' | column -t -s,
 
 build:
 	go build -v -o ramsql main.go
