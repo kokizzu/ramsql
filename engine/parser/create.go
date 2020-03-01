@@ -214,16 +214,16 @@ func (p *parser) parseTable() (*Decl, error) {
 						timeDecl.Add(zoneDecl)
 					}
 				case DefaultToken: // DEFAULT <VALUE>
-					dDecl, err := p.consumeToken(DefaultToken)
+					defaultDecl, err := p.consumeToken(DefaultToken)
 					if err != nil {
 						return nil, err
 					}
-					newAttribute.Add(dDecl)
-					vDecl, err := p.consumeToken(FalseToken, StringToken, NumberToken, LocalTimestampToken)
+					newAttribute.Add(defaultDecl)
+					valueDecl, err := p.consumeToken(FalseToken, StringToken, NumberToken, LocalTimestampToken, NullToken)
 					if err != nil {
 						return nil, err
 					}
-					dDecl.Add(vDecl)
+					defaultDecl.Add(valueDecl)
 				case OnToken: // ON UPDATE <VALUE>
 					onDecl, err := p.consumeToken(OnToken)
 					if err != nil {

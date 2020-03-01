@@ -62,46 +62,46 @@ func parseAttribute(decl *parser.Decl) (Attribute, error) {
 	attr.typeName = decl.Decl[0].Lexeme
 
 	// Maybe domain and special thing like primary key
-	typeDecl := decl.Decl[1:]
-	for i := range typeDecl {
-		log.Debug("Got %v for %s %s", typeDecl[i], attr.name, attr.typeName)
-		switch typeDecl[i].Token {
+	otherDecl := decl.Decl[1:]
+	for i := range otherDecl {
+		log.Debug("Got %v for %s %s", otherDecl[i], attr.name, attr.typeName)
+		switch otherDecl[i].Token {
 		case parser.AutoincrementToken: // AUTOINCREMENT
 			attr.autoIncrement = true
 		case parser.UniqueToken: // UNIQUE
 			attr.unique = true
 		case parser.NotToken: // NOT NULL
-			if len(typeDecl[i].Decl) != 1 {
+			if len(otherDecl[i].Decl) != 1 {
 				return attr, fmt.Errorf("Attribute %s has incomplete NOT NULL constraint", attr.name)
 			}
-			switch typeDecl[i].Decl[0].Token {
+			switch otherDecl[i].Decl[0].Token {
 			case parser.NullToken:
 				attr.isNullable = false
 			}
 		case parser.NullToken: // NULL
-			if len(typeDecl[i].Decl) != 0 {
+			if len(otherDecl[i].Decl) != 0 {
 				return attr, fmt.Errorf("Attribute %s has NULL constraint with extra arguments", attr.name)
 			}
 			attr.isNullable = true
 		case parser.DefaultToken: // DEFAULT <VALUE>
-			log.Debug("we get a default value for %s: %s!\n", attr.name, typeDecl[i].Decl[0].Lexeme)
-			switch typeDecl[i].Decl[0].Token {
+			log.Debug("we get a default value for %s: %s!\n", attr.name, otherDecl[i].Decl[0].Lexeme)
+			switch otherDecl[i].Decl[0].Token {
 			case parser.LocalTimestampToken, parser.NowToken:
 				log.Debug("Setting default value to NOW() func !\n")
 				attr.defaultValue = func() interface{} { return time.Now().Format(parser.DateLongFormat) }
 			default:
-				log.Debug("Setting default value to '%v'\n", typeDecl[i].Decl[0].Lexeme)
-				attr.defaultValue = typeDecl[i].Decl[0].Lexeme
+				log.Debug("Setting default value to '%v'\n", otherDecl[i].Decl[0].Lexeme)
+				attr.defaultValue = otherDecl[i].Decl[0].Lexeme
 			}
 		case parser.OnToken: // ON UPDATE <VALUE>
-			log.Debug("we get a on update value for %s: %s!\n", attr.name, typeDecl[i].Decl[0].Decl[0].Lexeme)
-			switch typeDecl[i].Decl[0].Decl[0].Token {
+			log.Debug("we get a on update value for %s: %s!\n", attr.name, otherDecl[i].Decl[0].Decl[0].Lexeme)
+			switch otherDecl[i].Decl[0].Decl[0].Token {
 			case parser.LocalTimestampToken, parser.NowToken:
 				log.Debug("Setting on update value to NOW() func !\n")
 				attr.onUpdateValue = func() interface{} { return time.Now().Format(parser.DateLongFormat) }
 			default:
-				log.Debug("Setting on update value to '%v'\n", typeDecl[i].Decl[0].Decl[0].Lexeme)
-				attr.onUpdateValue = typeDecl[i].Decl[0].Decl[0].Lexeme
+				log.Debug("Setting on update value to '%v'\n", otherDecl[i].Decl[0].Decl[0].Lexeme)
+				attr.onUpdateValue = otherDecl[i].Decl[0].Decl[0].Lexeme
 			}
 		}
 	}

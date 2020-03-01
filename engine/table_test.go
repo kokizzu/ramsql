@@ -97,3 +97,29 @@ func TestCreateAndInsertTableWithBacktickedKeyword(t *testing.T) {
 		t.Fatalf("Cannot execute query: %s", err)
 	}
 }
+
+func TestCreateWithAttributeDefaultNull(t *testing.T) {
+	log.UseTestLogger(t)
+
+	e := testEngine(t)
+	defer e.Stop()
+
+	query := `CREATE TABLE user (
+      id INT PRIMARY KEY AUTO_INCREMENT,
+	    last_name TEXT,
+	    first_name TEXT,
+	    email TEXT DEFAULT NULL,
+      created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      modified_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+	)`
+
+	i, err := parser.ParseInstruction(query)
+	if err != nil {
+		t.Fatalf("Cannot parse query %s : %s", query, err)
+	}
+
+	err = e.executeQuery(i[0], &TestEngineConn{})
+	if err != nil {
+		t.Fatalf("Cannot execute query: %s", err)
+	}
+}
