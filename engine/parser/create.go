@@ -532,13 +532,28 @@ func (p *parser) parseTableIndex() (*Decl, error) {
 		return nil, err
 	}
 
-	// Required: <INDEX-KEY> [, <INDEX-KEY>]* ')'
+	// Required: <INDEX-KEY> [ ASC | DESC ] [, <INDEX-KEY> [ ASC | DESC ] ]* ')'
 	for {
+		// Required: <INDEX-KEY>
 		_, err := p.consumeToken(StringToken)
 		if err != nil {
 			return nil, err
 		}
 
+		// Optional: 'ASC' | 'DESC'
+		if p.is(AscToken) {
+			_, err := p.consumeToken(AscToken)
+			if err != nil {
+				return nil, err
+			}
+		} else if p.is(DescToken) {
+			_, err := p.consumeToken(DescToken)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		// Optional: ',' | ')'
 		n, err := p.consumeToken(CommaToken, BracketClosingToken)
 		if err != nil {
 			return nil, err
