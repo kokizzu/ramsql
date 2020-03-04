@@ -689,37 +689,46 @@ func (p *parser) parseTableReference() (*Decl, error) {
 		}
 	}
 
-	// Optional: ON ...
+	// Optional: {ON ...}+
 	if p.is(OnToken) {
-		_, err := p.consumeToken(OnToken)
-		if err != nil {
-			return nil, err
-		}
-
-		switch p.cur().Token {
-		case UpdateToken:
-			_, err := p.consumeToken(UpdateToken)
+		for {
+			// Required: ON
+			_, err := p.consumeToken(OnToken)
 			if err != nil {
 				return nil, err
 			}
 
-			_, err = p.parseTableReferenceOption()
-			if err != nil {
-				return nil, err
-			}
-		case DeleteToken:
-			_, err := p.consumeToken(DeleteToken)
-			if err != nil {
-				return nil, err
+			// Required: (UPDATE | DELETE) <REFERENCE-OPTION>
+			switch p.cur().Token {
+			case UpdateToken:
+				_, err := p.consumeToken(UpdateToken)
+				if err != nil {
+					return nil, err
+				}
+
+				_, err = p.parseTableReferenceOption()
+				if err != nil {
+					return nil, err
+				}
+			case DeleteToken:
+				_, err := p.consumeToken(DeleteToken)
+				if err != nil {
+					return nil, err
+				}
+
+				_, err = p.parseTableReferenceOption()
+				if err != nil {
+					return nil, err
+				}
+			default:
+				// Unknown on reference option type
+				return nil, p.syntaxError()
 			}
 
-			_, err = p.parseTableReferenceOption()
-			if err != nil {
-				return nil, err
+			// Repeat
+			if !p.is(OnToken) {
+				break
 			}
-		default:
-			// Unknown on reference option type
-			return nil, p.syntaxError()
 		}
 	}
 
