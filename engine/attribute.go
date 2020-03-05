@@ -37,7 +37,8 @@ func (u Attribute) Name() string {
 		return u.selectAs
 	}
 
-	return u.name
+	nameFields := strings.Split(u.name, ".")
+	return nameFields[len(nameFields)-1]
 }
 
 // TranslateDecl traverses a Decl tree translating token sequences into Attribute settings
