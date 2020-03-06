@@ -31,13 +31,14 @@ func NewAttribute(name string, typeName string, autoIncrement bool) Attribute {
 	}
 }
 
-// Name is a convenience method to get the effective name (which may or may not be aliased)
-func (u Attribute) Name() string {
+// Alias is a convenience method to get the localized, effective name (which may or may not be aliased)
+func (u Attribute) Alias() string {
 	if u.selectAs != "" {
 		return u.selectAs
 	}
 
-	return u.name
+	nameFields := strings.Split(u.name, ".")
+	return nameFields[len(nameFields)-1]
 }
 
 // TranslateDecl traverses a Decl tree translating token sequences into Attribute settings

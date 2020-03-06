@@ -115,7 +115,7 @@ func generateVirtualRows(e *Engine, attr []Attribute, conn protocol.EngineConn, 
 	var header []string
 	var alias []string
 	for _, a := range attr {
-		alias = append(alias, a.Name())
+		alias = append(alias, a.Alias())
 		if strings.Contains(a.name, ".") == false {
 			a.name = t1Name + "." + a.name
 		}

@@ -109,6 +109,64 @@ func TestJoinAs(t *testing.T) {
 	}
 }
 
+func TestJoinWithMixedAs(t *testing.T) {
+	log.UseTestLogger(t)
+
+	db, err := sql.Open("ramsql", "TestJoinWithMixedAs")
+	if err != nil {
+		t.Fatalf("sql.Open: %s", err)
+	}
+	defer db.Close()
+
+	init := []string{
+		`CREATE TABLE address (
+       id BIGINT PRIMARY KEY AUTO_INCREMENT,
+       value TEXT
+     )`,
+		`CREATE TABLE user (
+       id BIGINT PRIMARY KEY AUTO_INCREMENT,
+       name TEXT,
+       address_id INT
+     )`,
+	}
+	for _, q := range init {
+		_, err := db.Exec(q)
+		if err != nil {
+			t.Fatalf("Cannot initialize test: %s", err)
+		}
+	}
+
+	query := `SELECT
+      user.id,
+  		user.name,
+  		address.id AS address_id,
+  		address.value AS address_value
+		FROM user 
+		INNER JOIN address
+		ON user.address_id = address.id`
+	// WHERE user.id = ?`
+	// rows, err := db.Query(query, 2)
+	rows, err := db.Query(query)
+	if err != nil {
+		t.Fatalf("Cannot select with joined as: %s", err)
+	}
+	defer rows.Close()
+
+	rowColumns, err := rows.Columns()
+	if err != nil {
+		t.Fatal("failed to get rows.Columns() for comparison")
+	}
+	expectedRowColumns := []string{"id", "name", "address_id", "address_value"}
+	if len(rowColumns) != len(expectedRowColumns) {
+		t.Fatalf("expected %d row columns, got %d", len(expectedRowColumns), len(rowColumns))
+	}
+	for i := range expectedRowColumns {
+		if expectedRowColumns[i] != rowColumns[i] {
+			t.Errorf("at position %d expected column name %q, got %q", i, expectedRowColumns[i], rowColumns[i])
+		}
+	}
+}
+
 func TestMultipleJoin(t *testing.T) {
 	log.UseTestLogger(t)
 
