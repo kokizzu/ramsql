@@ -96,6 +96,7 @@ const (
 	TableToken                 // Second-order
 	TextToken                  // Type
 	TimeToken                  // Second-order
+	TrueToken                  // Second-order
 	TruncateToken              // First-order
 	UniqueToken                // Second-order
 	UpdateToken                // First-order
@@ -181,6 +182,7 @@ type Matcher func() bool
 //go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "*" --name Star
 //go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "table"
 //go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "time"
+//go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "true"
 //go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "truncate"
 //go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "unique"
 //go:generate go run ../../utils/lexer-generate-matcher.go --lexeme "update"

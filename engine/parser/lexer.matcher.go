@@ -286,6 +286,10 @@ func (l *lexer) MatchTimeToken() bool {
   return l.Match([]byte("time"), TimeToken)
 }
 
+func (l *lexer) MatchTrueToken() bool {
+  return l.Match([]byte("true"), TrueToken)
+}
+
 func (l *lexer) MatchTruncateToken() bool {
   return l.Match([]byte("truncate"), TruncateToken)
 }

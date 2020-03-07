@@ -329,3 +329,251 @@ func TestUpdateDefaultCurrentTimestampOnUpdateCurrentTimestamp(t *testing.T) {
 		t.Fatalf("Expected insert modified_date (%s) and update modified_date (%s) to be different", insertModifiedDate, updateModifiedDate)
 	}
 }
+
+func TestUpdateWithSetFalseValue(t *testing.T) {
+	log.UseTestLogger(t)
+
+	db, err := sql.Open("ramsql", "TestUpdateWithSetFalseValue")
+	if err != nil {
+		t.Fatalf("sql.Open : Error : %s\n", err)
+	}
+	defer db.Close()
+
+	createQuery := `CREATE TABLE account (
+		  id INT PRIMARY KEY AUTO_INCREMENT,
+			email TEXT,
+			is_enabled TINYINT(1) NOT NULL,
+			modified_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+		)`
+
+	_, err = db.Exec(createQuery)
+	if err != nil {
+		t.Fatalf("sql.Exec: Error: %s\n", err)
+	}
+
+	insertQuery := `INSERT INTO account (
+  		email,
+      is_enabled
+  	)
+		VALUES (
+			'foo@bar.com',
+			true
+		)`
+
+	_, err = db.Exec(insertQuery)
+	if err != nil {
+		t.Fatalf("Cannot insert into table account: %s", err)
+	}
+
+	selectQuery := `SELECT
+      id,
+			email,
+			is_enabled
+		FROM account
+		WHERE id = 1`
+
+	rows, err := db.Query(selectQuery)
+	if err != nil {
+		t.Fatalf("Cannot select from table account (before update): %s", err)
+	}
+
+	var n int64
+	for rows.Next() {
+		n++
+
+		var id int
+		var email string
+		var isEnabled bool
+
+		err = rows.Scan(&id, &email, &isEnabled)
+		if err != nil {
+			t.Fatalf("Cannot scan rows from table account: %s", err)
+		}
+
+		if n == 1 {
+			if id != 1 {
+				t.Errorf("id field invalid. row=%d expected=%d actual=%d", n, 1, id)
+			}
+			if email != "foo@bar.com" {
+				t.Errorf("email field invalid. row=%d expected=%s actual=%s", n, "foo@bar.com", email)
+			}
+			if isEnabled != true {
+				t.Errorf("is_enabled field invalid. row=%d expected=%v actual=%v", n, true, isEnabled)
+			}
+		}
+	}
+	rows.Close()
+	if n != 1 {
+		t.Fatalf("Expected 1 rows, got %d", n)
+	}
+
+	updateQuery := `UPDATE account
+    SET
+		  email = 'bar@baz.com',
+		  is_enabled = false
+		WHERE id = 1`
+
+	_, err = db.Exec(updateQuery)
+	if err != nil {
+		t.Fatalf("Cannot update table account: %s", err)
+	}
+
+	rows, err = db.Query(selectQuery)
+	if err != nil {
+		t.Fatalf("Cannot select from table account (after update): %s", err)
+	}
+
+	n = 0
+	for rows.Next() {
+		n++
+
+		var id int
+		var email string
+		var isEnabled bool
+
+		err = rows.Scan(&id, &email, &isEnabled)
+		if err != nil {
+			t.Fatalf("Cannot scan rows from table account: %s", err)
+		}
+
+		if n == 1 {
+			if id != 1 {
+				t.Errorf("id field invalid. row=%d expected=%d actual=%d", n, 1, id)
+			}
+			if email != "bar@baz.com" {
+				t.Errorf("email field invalid. row=%d expected=%s actual=%s", n, "bar@baz.com", email)
+			}
+			if isEnabled != false {
+				t.Errorf("is_enabled field invalid. row=%d expected=%v actual=%v", n, false, isEnabled)
+			}
+		}
+	}
+	rows.Close()
+	if n != 1 {
+		t.Fatalf("Expected 1 rows, got %d", n)
+	}
+}
+
+func TestUpdateWithSetTrueValue(t *testing.T) {
+	log.UseTestLogger(t)
+
+	db, err := sql.Open("ramsql", "TestUpdateWithSetTrueValue")
+	if err != nil {
+		t.Fatalf("sql.Open : Error : %s\n", err)
+	}
+	defer db.Close()
+
+	createQuery := `CREATE TABLE account (
+		  id INT PRIMARY KEY AUTO_INCREMENT,
+			email TEXT,
+			is_enabled TINYINT(1) NOT NULL,
+			modified_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+		)`
+
+	_, err = db.Exec(createQuery)
+	if err != nil {
+		t.Fatalf("sql.Exec: Error: %s\n", err)
+	}
+
+	insertQuery := `INSERT INTO account (
+  		email,
+      is_enabled
+  	)
+		VALUES (
+			'foo@bar.com',
+			false
+		)`
+
+	_, err = db.Exec(insertQuery)
+	if err != nil {
+		t.Fatalf("Cannot insert into table account: %s", err)
+	}
+
+	selectQuery := `SELECT
+	      id,
+				email,
+				is_enabled
+			FROM account
+			WHERE id = 1`
+
+	rows, err := db.Query(selectQuery)
+	if err != nil {
+		t.Fatalf("Cannot select from table account (before update): %s", err)
+	}
+
+	var n int64
+	for rows.Next() {
+		n++
+
+		var id int
+		var email string
+		var isEnabled bool
+
+		err = rows.Scan(&id, &email, &isEnabled)
+		if err != nil {
+			t.Fatalf("Cannot scan rows from table account: %s", err)
+		}
+
+		if n == 1 {
+			if id != 1 {
+				t.Errorf("id field invalid. row=%d expected=%d actual=%d", n, 1, id)
+			}
+			if email != "foo@bar.com" {
+				t.Errorf("email field invalid. row=%d expected=%s actual=%s", n, "foo@bar.com", email)
+			}
+			if isEnabled != false {
+				t.Errorf("is_enabled field invalid. row=%d expected=%v actual=%v", n, false, isEnabled)
+			}
+		}
+	}
+	rows.Close()
+	if n != 1 {
+		t.Fatalf("Expected 1 rows, got %d", n)
+	}
+
+	updateQuery := `UPDATE account
+	    SET
+			  email = 'bar@baz.com',
+			  is_enabled = true
+			WHERE id = 1`
+
+	_, err = db.Exec(updateQuery)
+	if err != nil {
+		t.Fatalf("Cannot update table account: %s", err)
+	}
+
+	rows, err = db.Query(selectQuery)
+	if err != nil {
+		t.Fatalf("Cannot select from table account (after update): %s", err)
+	}
+
+	n = 0
+	for rows.Next() {
+		n++
+
+		var id int
+		var email string
+		var isEnabled bool
+
+		err = rows.Scan(&id, &email, &isEnabled)
+		if err != nil {
+			t.Fatalf("Cannot scan rows from table account: %s", err)
+		}
+
+		if n == 1 {
+			if id != 1 {
+				t.Errorf("id field invalid. row=%d expected=%d actual=%d", n, 1, id)
+			}
+			if email != "bar@baz.com" {
+				t.Errorf("email field invalid. row=%d expected=%s actual=%s", n, "bar@baz.com", email)
+			}
+			if isEnabled != true {
+				t.Errorf("is_enabled field invalid. row=%d expected=%v actual=%v", n, true, isEnabled)
+			}
+		}
+	}
+	rows.Close()
+	if n != 1 {
+		t.Fatalf("Expected 1 rows, got %d", n)
+	}
+}
