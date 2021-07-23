@@ -3,7 +3,7 @@ package engine
 import (
 	"fmt"
 
-	"github.com/mlhoyt/ramsql/engine/protocol"
+	"github.com/kokizzu/ramsql/engine/protocol"
 )
 
 func deleteRows(e *Engine, tables []*Table, conn protocol.EngineConn, predicates []Predicate) error {

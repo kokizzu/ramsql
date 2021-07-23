@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"unicode"
 
-	"github.com/mlhoyt/ramsql/engine/log"
+	"github.com/kokizzu/ramsql/engine/log"
 )
 
 type lexer struct {

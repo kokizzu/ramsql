@@ -1,7 +1,5 @@
 package parser
 
-import ()
-
 func (p *parser) parseDelete() (*Instruction, error) {
 	i := &Instruction{}
 

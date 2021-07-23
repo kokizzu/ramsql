@@ -1,7 +1,7 @@
 package engine
 
 import (
-	"github.com/mlhoyt/ramsql/engine/parser"
+	"github.com/kokizzu/ramsql/engine/parser"
 )
 
 /*

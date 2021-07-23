@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mlhoyt/ramsql/engine/log"
-	"github.com/mlhoyt/ramsql/engine/parser"
+	"github.com/kokizzu/ramsql/engine/log"
+	"github.com/kokizzu/ramsql/engine/parser"
 )
 
 func updateValues(r *Relation, row int, values map[string]interface{}) error {

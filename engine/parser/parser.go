@@ -6,7 +6,7 @@ package parser
 import (
 	"fmt"
 
-	"github.com/mlhoyt/ramsql/engine/log"
+	"github.com/kokizzu/ramsql/engine/log"
 )
 
 // The parser structure holds the parser's internal state.

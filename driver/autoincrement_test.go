@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/mlhoyt/ramsql/engine/log"
+	"github.com/kokizzu/ramsql/engine/log"
 )
 
 func TestAutoIncrementSimple(t *testing.T) {

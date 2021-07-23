@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mlhoyt/ramsql/engine/log"
+	"github.com/kokizzu/ramsql/engine/log"
 
-	_ "github.com/mlhoyt/ramsql/driver"
+	_ "github.com/kokizzu/ramsql/driver"
 )
 
 func TestUpdateSimple(t *testing.T) {

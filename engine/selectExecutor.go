@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/mlhoyt/ramsql/engine/parser"
-	"github.com/mlhoyt/ramsql/engine/protocol"
+	"github.com/kokizzu/ramsql/engine/parser"
+	"github.com/kokizzu/ramsql/engine/protocol"
 )
 
 /*

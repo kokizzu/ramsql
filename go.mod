@@ -1,4 +1,4 @@
-module github.com/mlhoyt/ramsql
+module github.com/kokizzu/ramsql
 
 require (
 	github.com/go-gorp/gorp v2.0.0+incompatible

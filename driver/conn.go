@@ -4,8 +4,8 @@ import (
 	"database/sql/driver"
 	"sync"
 
-	"github.com/mlhoyt/ramsql/engine/log"
-	"github.com/mlhoyt/ramsql/engine/protocol"
+	"github.com/kokizzu/ramsql/engine/log"
+	"github.com/kokizzu/ramsql/engine/protocol"
 )
 
 // Conn implements sql/driver Conn interface

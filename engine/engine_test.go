@@ -3,7 +3,7 @@ package engine
 import (
 	"testing"
 
-	"github.com/mlhoyt/ramsql/engine/protocol"
+	"github.com/kokizzu/ramsql/engine/protocol"
 )
 
 type TestEngineConn struct {

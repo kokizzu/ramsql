@@ -1,6 +1,6 @@
 # RamSQL
 
-![](https://github.com/mlhoyt/ramsql/workflows/CI/badge.svg)
+![](https://github.com/kokizzu/ramsql/workflows/CI/badge.svg)
 
 ## Disposable SQL engine
 
@@ -21,7 +21,7 @@ Bottom line: One DataSourceName per test and you have full test isolation in no 
 ## Installation
 
 ```shell
-go get github.com/mlhoyt/ramsql
+go get github.com/kokizzu/ramsql
 ```
 
 ## Usage 
@@ -67,7 +67,7 @@ import (
   "fmt"
   "testing"
 
-  _ "github.com/mlhoyt/ramsql/driver"
+  _ "github.com/kokizzu/ramsql/driver"
 )
 
 
@@ -127,7 +127,7 @@ CREATE TABLE IF NOT EXISTS user_addresses (address_id INT, user_id INT);
 You may want to test its validity:
 
 ```console
-$ go install github.com/mlhoyt/ramsql
+$ go install github.com/kokizzu/ramsql
 $ ramsql < schema.sql
 ramsql> Query OK. 1 rows affected
 ramsql> Query OK. 1 rows affected

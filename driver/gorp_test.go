@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-gorp/gorp"
 
-	"github.com/mlhoyt/ramsql/engine/log"
+	"github.com/kokizzu/ramsql/engine/log"
 )
 
 func TestGorp(t *testing.T) {

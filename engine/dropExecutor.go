@@ -3,8 +3,8 @@ package engine
 import (
 	"fmt"
 
-	"github.com/mlhoyt/ramsql/engine/parser"
-	"github.com/mlhoyt/ramsql/engine/protocol"
+	"github.com/kokizzu/ramsql/engine/parser"
+	"github.com/kokizzu/ramsql/engine/protocol"
 )
 
 func dropExecutor(e *Engine, dropDecl *parser.Decl, conn protocol.EngineConn) error {

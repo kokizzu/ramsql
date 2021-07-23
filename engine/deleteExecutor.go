@@ -1,9 +1,9 @@
 package engine
 
 import (
-	"github.com/mlhoyt/ramsql/engine/log"
-	"github.com/mlhoyt/ramsql/engine/parser"
-	"github.com/mlhoyt/ramsql/engine/protocol"
+	"github.com/kokizzu/ramsql/engine/log"
+	"github.com/kokizzu/ramsql/engine/parser"
+	"github.com/kokizzu/ramsql/engine/protocol"
 )
 
 func deleteExecutor(e *Engine, deleteDecl *parser.Decl, conn protocol.EngineConn) error {

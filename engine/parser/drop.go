@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"github.com/mlhoyt/ramsql/engine/log"
+	"github.com/kokizzu/ramsql/engine/log"
 )
 
 func (p *parser) parseDrop() (*Instruction, error) {

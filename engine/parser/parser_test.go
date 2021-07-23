@@ -3,7 +3,7 @@ package parser
 import (
 	"testing"
 
-	"github.com/mlhoyt/ramsql/engine/log"
+	"github.com/kokizzu/ramsql/engine/log"
 )
 
 func TestParserCreateTableNoAttrConstraints(t *testing.T) {
